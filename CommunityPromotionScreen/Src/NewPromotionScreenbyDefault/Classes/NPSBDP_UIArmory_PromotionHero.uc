@@ -95,18 +95,20 @@ simulated function InitPromotion(StateObjectReference UnitRef, optional bool bIn
 	PopulateData();
 
 	//Only set position and animate in the scrollbar once after data population. Prevents scrollbar flicker on scrolling.
-	if (HasBrigadierRank())
+	if (Scrollbar != none)
 	{
-		Scrollbar.SetPosition(-465, 310);
-	}
-	else
-	{
-		Scrollbar.SetPosition(-550, 310);
-	}
+		if (HasBrigadierRank())
+		{
+			Scrollbar.SetPosition(-465, 310);
+		}
+		else
+		{
+			Scrollbar.SetPosition(-550, 310);
+		}
 		
-	Scrollbar.MC.SetNum("_alpha", 0);
-	Scrollbar.AddTweenBetween("_alpha", 0, 100, 0.2f, 0.3f);
-
+		Scrollbar.MC.SetNum("_alpha", 0);
+		Scrollbar.AddTweenBetween("_alpha", 0, 100, 0.2f, 0.3f);
+	}
 	DisableNavigation(); // bsg-nlong (1.25.17): This and the column panel will have to use manual naviation, so we'll disable the navigation here
 
 	// bsg-nlong (1.25.17): Focus a column so the screen loads with an ability highlighted
@@ -208,9 +210,17 @@ simulated function PopulateData()
 
 	AS_SetRank(rankIcon);
 	AS_SetClass(classIcon);
-	AS_SetFaction(FactionState.GetFactionIcon());
 
-	AS_SetHeaderData(Caps(FactionState.GetFactionTitle()), Caps(Unit.GetName(eNameType_FullNick)), HeaderString, m_strSharedAPLabel, m_strSoldierAPLabel);
+	if (FactionState != none)
+	{
+		AS_SetFaction(FactionState.GetFactionIcon());
+		AS_SetHeaderData(Caps(FactionState.GetFactionTitle()), Caps(Unit.GetName(eNameType_FullNick)), HeaderString, m_strSharedAPLabel, m_strSoldierAPLabel);
+	}
+	else
+	{
+		AS_SetHeaderData("", Caps(Unit.GetName(eNameType_FullNick)), HeaderString, m_strSharedAPLabel, m_strSoldierAPLabel);
+	}
+
 	AS_SetAPData(GetSharedAbilityPoints(), Unit.AbilityPoints);
 	AS_SetCombatIntelData(Unit.GetCombatIntelligenceLabel());
 	
@@ -276,38 +286,32 @@ function bool UpdateAbilityIcons_Override(out NPSBDP_UIArmory_PromotionHeroColum
 	local int iAbility;
 	local bool bHasColumnAbility, bConnectToNextAbility;
 	local string AbilityName, AbilityIcon, BGColor, FGColor;
-//	local int NewMaxPosition;
 
 	AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
 	Unit = GetUnit();
 	AbilityTree = Unit.GetRankAbilities(Column.Rank);
 
-//	NewMaxPosition = Max(AbilityTree.Length - NUM_ABILITIES_PER_COLUMN, NUM_ABILITIES_PER_COLUMN);
-//	if (NewMaxPosition > MaxPosition)
-//		MaxPosition = NewMaxPosition;
-
 	// MaxPosition is the maximum value for Position
 	MaxPosition = Max(AbilityTree.Length - NUM_ABILITIES_PER_COLUMN, MaxPosition);
 
-	//`LOG("MaxPosition" @ MaxPosition, bLog, 'PromotionScreen');
-	Column.AbilityNames.Length = 0;
-	
-	//for (iAbility = 0; iAbility < AbilityTree.Length; iAbility++)
-	//{
-	//	`LOG("Create Column" @ Column.Rank @ AbilityTree[iAbility].AbilityName, bLog, 'PromotionScreen');
-	//}
-
+	Column.AbilityNames.Length = 0;	
 
 	for (iAbility = Position; iAbility < Position + NUM_ABILITIES_PER_COLUMN; iAbility++)
 	{
-		AbilityTemplate = AbilityTemplateManager.FindAbilityTemplate(AbilityTree[iAbility].AbilityName);
+		if (iAbility < AbilityTree.Length)
+		{
+			AbilityTemplate = AbilityTemplateManager.FindAbilityTemplate(AbilityTree[iAbility].AbilityName);
+		}
+		else
+		{
+			AbilityTemplate = none;
+		}
 		
 		if (AbilityTemplate != none)
 		{
 			if (Column.AbilityNames.Find(AbilityTemplate.DataName) == INDEX_NONE)
 			{
 				Column.AbilityNames.AddItem(AbilityTemplate.DataName);
-				//`LOG(iAbility @ "Column.AbilityNames Add" @ AbilityTemplate.DataName @ Column.AbilityNames.Length, bLog, 'PromotionScreen');
 			}
 
 			// The unit is not yet at the rank needed for this column
@@ -354,10 +358,14 @@ function bool UpdateAbilityIcons_Override(out NPSBDP_UIArmory_PromotionHeroColum
 				{
 					bConnectToNextAbility = false;
 					NextRankTree = Unit.GetRankAbilities(Column.Rank + 1);
-					NextAbilityTemplate = AbilityTemplateManager.FindAbilityTemplate(NextRankTree[iAbility].AbilityName);
-					if (NextAbilityTemplate.PrerequisiteAbilities.Length > 0 && NextAbilityTemplate.PrerequisiteAbilities.Find(AbilityTemplate.DataName) != INDEX_NONE)
+
+					if (iAbility < NextRankTree.Length)
 					{
-						bConnectToNextAbility = true;
+						NextAbilityTemplate = AbilityTemplateManager.FindAbilityTemplate(NextRankTree[iAbility].AbilityName);
+						if (NextAbilityTemplate != none && NextAbilityTemplate.PrerequisiteAbilities.Find(AbilityTemplate.DataName) != INDEX_NONE)
+						{
+							bConnectToNextAbility = true;
+						}
 					}
 				}
 
@@ -1143,3 +1151,224 @@ simulated function AddChildTweenBetween(string ChildPath, String Prop, float Sta
 
 	MC.EndOp();
 }
+
+// =================================================================================================================
+// Start Issue #28 - reimplement functions from parent classes, and edit some of the code to prevent "accessed none" warnings.
+
+simulated function UpdateNavHelp() // bsg-jrebar (4/21/17): Changed UI flow and button positions per new additions
+{
+	//<workshop> SCI 2016/4/12
+	//INS:
+	local int i;
+	local string PrevKey, NextKey;
+	local XGParamTag LocTag;
+	local XComGameState_HeadquartersXCom XComHQ;
+	local XComGameState_Unit Unit;
+	Unit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(UnitReference.ObjectID));
+
+	if(!bIsFocused)
+	{
+		return;
+	}
+
+	NavHelp = `HQPRES.m_kAvengerHUD.NavHelp;
+
+	NavHelp.ClearButtonHelp();
+	//</workshop>
+
+	if(UIAfterAction(Movie.Stack.GetScreen(class'UIAfterAction')) != none)
+	{
+		//<workshop> SCI 2016/3/1
+		//WAS:
+		//`HQPRES.m_kAvengerHUD.NavHelp.ClearButtonHelp();
+		//`HQPRES.m_kAvengerHUD.NavHelp.AddContinueButton(OnCancel);
+		NavHelp.AddBackButton(OnCancel);
+
+		if (UIArmory_PromotionItem(List.GetSelectedItem()).bEligibleForPromotion && `ISCONTROLLERACTIVE)
+		{
+			NavHelp.AddSelectNavHelp();
+		}
+
+		//bsg-hlee (05.08.17): Remove the big continue button form the screen if controller. 
+		//Also removed "A" press from OnUnrealCommand since "B" is already closing the screen.
+		if(!`ISCONTROLLERACTIVE)
+		{
+			if (!XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(UnitReference.ObjectID)).ShowPromoteIcon())
+			{
+				NavHelp.AddContinueButton(OnCancel);
+			}
+		}
+		//bsg-hlee (05.08.17): End
+	
+		if(class'XComGameState_HeadquartersXCom'.static.IsObjectiveCompleted('T0_M7_WelcomeToGeoscape'))
+			NavHelp.AddLeftHelp(m_strMakePosterTitle, class'UIUtilities_Input'.static.GetGamepadIconPrefix() $class'UIUtilities_Input'.const.ICON_X_SQUARE, MakePosterButton);
+
+
+		if( `ISCONTROLLERACTIVE )
+		{
+			// List will always be 'none' with NPSBD, so this will always evaluate to "true". -Iridar, Issue #28
+			//if( !UIArmory_PromotionItem(List.GetSelectedItem()).bIsDisabled )
+			//{
+				NavHelp.AddCenterHelp(m_strInfo, class'UIUtilities_Input'.static.GetGamepadIconPrefix() $class'UIUtilities_Input'.const.ICON_LSCLICK_L3);
+			//}
+
+			if (IsAllowedToCycleSoldiers() && class'UIUtilities_Strategy'.static.HasSoldiersToCycleThrough(UnitReference, CanCycleTo))
+			{
+				NavHelp.AddCenterHelp(m_strTabNavHelp, class'UIUtilities_Input'.static.GetGamepadIconPrefix() $ class'UIUtilities_Input'.const.ICON_LBRB_L1R1); // bsg-jrebar (5/23/17): Removing inlined buttons
+			}
+
+			NavHelp.AddCenterHelp(m_strRotateNavHelp, class'UIUtilities_Input'.static.GetGamepadIconPrefix() $ class'UIUtilities_Input'.const.ICON_RSTICK); // bsg-jrebar (5/23/17): Removing inlined buttons
+		}
+	}
+	else
+	{
+		//<workshop> SCI 2016/4/12
+		//WAS:
+		//super.UpdateNavHelp();
+		NavHelp.AddBackButton(OnCancel);
+		
+		// List will always be 'none' with NPSBD, so this will never happen. -Iridar, Issue #28
+		//if (UIArmory_PromotionItem(List.GetSelectedItem()).bEligibleForPromotion)
+		//{
+		//	NavHelp.AddSelectNavHelp();
+		//}
+
+		if (XComHQPresentationLayer(Movie.Pres) != none)
+		{
+			LocTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
+			LocTag.StrValue0 = Movie.Pres.m_kKeybindingData.GetKeyStringForAction(PC.PlayerInput, eTBC_PrevUnit);
+			PrevKey = `XEXPAND.ExpandString(PrevSoldierKey);
+			LocTag.StrValue0 = Movie.Pres.m_kKeybindingData.GetKeyStringForAction(PC.PlayerInput, eTBC_NextUnit);
+			NextKey = `XEXPAND.ExpandString(NextSoldierKey);
+
+			if (class'XComGameState_HeadquartersXCom'.static.GetObjectiveStatus('T0_M7_WelcomeToGeoscape') != eObjectiveState_InProgress &&
+				RemoveMenuEvent == '' && NavigationBackEvent == '' && !`ScreenStack.IsInStack(class'UISquadSelect'))
+			{
+				NavHelp.AddGeoscapeButton();
+			}
+
+			if (Movie.IsMouseActive() && IsAllowedToCycleSoldiers() && class'UIUtilities_Strategy'.static.HasSoldiersToCycleThrough(UnitReference, CanCycleTo))
+			{
+				NavHelp.SetButtonType("XComButtonIconPC");
+				i = eButtonIconPC_Prev_Soldier;
+				NavHelp.AddCenterHelp( string(i), "", PrevSoldier, false, PrevKey);
+				i = eButtonIconPC_Next_Soldier; 
+				NavHelp.AddCenterHelp( string(i), "", NextSoldier, false, NextKey);
+				NavHelp.SetButtonType("");
+			}
+		}
+
+		if (class'XComGameState_HeadquartersXCom'.static.IsObjectiveCompleted('T0_M7_WelcomeToGeoscape'))
+		{
+			if(`ISCONTROLLERACTIVE)
+				NavHelp.AddLeftHelp(m_strMakePosterTitle, class'UIUtilities_Input'.static.GetGamepadIconPrefix() $class'UIUtilities_Input'.const.ICON_X_SQUARE, MakePosterButton);
+			else
+				NavHelp.AddLeftHelp(m_strMakePosterTitle, , MakePosterButton);
+		}
+
+		if( `ISCONTROLLERACTIVE )
+		{
+			if (!UIArmory_PromotionItem(List.GetSelectedItem()).bIsDisabled)
+			{
+				NavHelp.AddCenterHelp(m_strInfo, class'UIUtilities_Input'.static.GetGamepadIconPrefix() $class'UIUtilities_Input'.const.ICON_LSCLICK_L3);
+			}
+
+			if (IsAllowedToCycleSoldiers() && class'UIUtilities_Strategy'.static.HasSoldiersToCycleThrough(UnitReference, CanCycleTo))
+			{
+				NavHelp.AddCenterHelp(m_strTabNavHelp, class'UIUtilities_Input'.static.GetGamepadIconPrefix() $ class'UIUtilities_Input'.const.ICON_LBRB_L1R1); // bsg-jrebar (5/23/17): Removing inlined buttons
+			}
+
+			NavHelp.AddCenterHelp(m_strRotateNavHelp, class'UIUtilities_Input'.static.GetGamepadIconPrefix() $ class'UIUtilities_Input'.const.ICON_RSTICK); // bsg-jrebar (5/23/17): Removing inlined buttons
+		}
+
+
+		XComHQ = class'UIUtilities_Strategy'.static.GetXComHQ();
+		
+		if( XComHQ.HasFacilityByName('RecoveryCenter') && IsAllowedToCycleSoldiers() && !`ScreenStack.IsInStack(class'UIFacility_TrainingCenter')
+			&& !`ScreenStack.IsInStack(class'UISquadSelect') && !`ScreenStack.IsInStack(class'UIAfterAction') && Unit.GetSoldierClassTemplate().bAllowAWCAbilities)
+		{
+			if( `ISCONTROLLERACTIVE ) 
+				NavHelp.AddRightHelp(m_strHotlinkToRecovery, class'UIUtilities_Input'.consT.ICON_BACK_SELECT);
+			else
+				NavHelp.AddRightHelp(m_strHotlinkToRecovery, , JumpToRecoveryFacility);
+		}
+
+		NavHelp.Show();
+		//</workshop>
+	}
+}
+
+simulated function UpdateClassRowSelection()
+{
+	// List will always be 'none' with NPSBD, so this will never happen. -Iridar, Issue #28
+	//if (List.SelectedIndex < 0)
+	//{
+	//	ClassRowItem.SetSelectedAbility(1);
+	//}
+}
+
+simulated function OnReceiveFocus()
+{
+	//local int i;
+	local XComHQPresentationLayer HQPres;
+
+	super(UIArmory).OnReceiveFocus();
+
+	HQPres = XComHQPresentationLayer(Movie.Pres);
+
+	if(HQPres != none)
+	{
+		if(bAfterActionPromotion) //If the AfterAction screen is running, let it position the camera
+			HQPres.CAMLookAtNamedLocation(AfterActionScreen.GetPromotionBlueprintTag(UnitReference), `HQINTERPTIME);
+		else
+			HQPres.CAMLookAtNamedLocation(CameraTag, `HQINTERPTIME);
+	}
+
+	// Comment out code that will never run, since List will always be 'none'. -Iridar, Issue #28
+	//for(i = 0; i < List.ItemCount; ++i)
+	//{
+	//	UIArmory_PromotionItem(List.GetItem(i)).RealizePromoteState();
+	//}
+
+	if (previousSelectedIndexOnFocusLost >= 0)
+	{
+		// Issue #28
+		Navigator.SetSelected(/*List*/);
+		//List.SetSelectedIndex(previousSelectedIndexOnFocusLost);
+		//UIArmory_PromotionItem(List.GetSelectedItem()).SetSelectedAbility(SelectedAbilityIndex);
+	}
+	else
+	{
+		Navigator.SetSelected(ClassRowItem);
+		ClassRowItem.SetSelectedAbility(1);
+	}
+	UpdateNavHelp();
+}
+
+simulated function Hide()
+{
+	super(UIScreen).Hide();
+
+	// Issue #28 - guard NavHelp behind 'none' check.
+	if (NavHelp != none)
+	{
+		NavHelp.Hide();
+	}
+}
+
+simulated function OnLoseFocus()
+{
+	super(UIArmory).OnLoseFocus();
+	//<workshop> FIX_FOR_PROMOTION_LOST_FOCUS_ISSUE kmartinez 2015-10-28
+	// only set our variable if we're not trying to set a default value.
+	
+	// Start Issue #28
+	//if( List.SelectedIndex != -1)
+	//	previousSelectedIndexOnFocusLost = List.SelectedIndex;
+	// End Issue #28
+
+	//List.SetSelectedIndex(-1);
+	`HQPRES.m_kAvengerHUD.NavHelp.ClearButtonHelp();
+}
+
+// End Issue #28 
