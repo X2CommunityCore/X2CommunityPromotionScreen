@@ -226,10 +226,10 @@ simulated function PopulateData()
 	
 	AS_SetPathLabels(
 		m_strBranchesLabel,
-		ClassTemplate.AbilityTreeTitles[0 + Position],
-		ClassTemplate.AbilityTreeTitles[1 + Position],
-		ClassTemplate.AbilityTreeTitles[2 + Position],
-		ClassTemplate.AbilityTreeTitles[3 + Position]
+		GetLocalizedAbilityTreeTitle(ClassTemplate, 0 + Position),
+		GetLocalizedAbilityTreeTitle(ClassTemplate, 1 + Position),
+		GetLocalizedAbilityTreeTitle(ClassTemplate, 2 + Position),
+		GetLocalizedAbilityTreeTitle(ClassTemplate, 3 + Position)
 	);
 
 	// Fix None-context
@@ -247,6 +247,51 @@ simulated function PopulateData()
 	
 	RealizeScrollbar();
 	HidePreview();
+}
+
+function string GetLocalizedAbilityTreeTitle(const X2SoldierClassTemplate ClassTemplate, const int iRowIndex)
+{
+	local string strAbilityTreeTitle;
+	local XComLWTuple Tuple;
+
+	if (ClassTemplate.AbilityTreeTitles.Length > iRowIndex)
+	{
+		strAbilityTreeTitle = ClassTemplate.AbilityTreeTitles[iRowIndex];
+	}
+	else if (iRowIndex == 0 && strAbilityTreeTitle == "")
+	{
+		strAbilityTreeTitle = ClassTemplate.LeftAbilityTreeTitle;
+	}
+	else if (iRowIndex == 1 && strAbilityTreeTitle == "")
+	{
+		strAbilityTreeTitle = ClassTemplate.RightAbilityTreeTitle;
+	}
+
+	// Start Issue #22
+	/// Mods can listen to 'OverrideLocalizedAbilityTreeTitle' event to use their own logic 
+	/// to set localized names for ability trees. Typical use case would be adding a localized name
+	/// for a new row of abilities that were dynamically inserted into unit's ability tree.
+	/// iRowIndex begins at 0, starting with the top row, which corresponds to left ability column
+	/// on the "old" promotion screen.
+	///
+	/// ```event
+	/// EventID: OverrideLocalizedAbilityTreeTitle,
+	/// EventData: [in int iRowIndex, inout string strAbilityTreeTitle],
+	/// EventSource: XComGameState_Unit (UnitState),
+	/// NewGameState: none
+	/// ```
+	Tuple = new class'XComLWTuple';
+	Tuple.Id = 'OverrideLocalizedAbilityTreeTitle';
+	Tuple.Data.Add(2);
+	Tuple.Data[0].kind = XComLWTVInt;
+	Tuple.Data[0].i = iRowIndex;
+	Tuple.Data[1].kind = XComLWTVString;
+	Tuple.Data[1].s = strAbilityTreeTitle;
+
+	`XEVENTMGR.TriggerEvent(Tuple.Id, Tuple, GetUnit());
+
+	return Tuple.Data[1].s;
+	// End Issue #22
 }
 
 function HidePreview()
@@ -442,6 +487,9 @@ simulated function bool OnUnrealCommand(int cmd, int arg)
 		return false;
 	}
 
+	bHandled = Columns[m_iCurrentlySelectedColumn].OnUnrealCommand(cmd, arg); // bsg-nlong (1.25.17): Send the input to the column first and see if it can consume it
+	if (bHandled) return true;
+
 	bHandled = true;
 
 	switch(Cmd)
@@ -472,12 +520,47 @@ simulated function bool OnUnrealCommand(int cmd, int arg)
 			if( Scrollbar != none )
 				Scrollbar.OnMouseScrollEvent(1);				
 			break;
+		// UIArmory_PromotionHero::OnUnrealCommand
+		case class'UIUtilities_Input'.const.FXS_DPAD_RIGHT:
+		case class'UIUtilities_Input'.const.FXS_VIRTUAL_LSTICK_RIGHT:
+			SelectNextColumn();
+			bHandled = true;
+			break;
+		case class'UIUtilities_Input'.const.FXS_DPAD_LEFT :
+		case class'UIUtilities_Input'.const.FXS_VIRTUAL_LSTICK_LEFT :
+			SelectPrevColumn();
+			bHandled = true;
+			break;
+		// UIArmory_Promotion::OnUnrealCommand
+		case class'UIUtilities_Input'.const.FXS_MOUSE_5:
+		case class'UIUtilities_Input'.const.FXS_KEY_TAB:
+		case class'UIUtilities_Input'.const.FXS_BUTTON_RBUMPER:
+		case class'UIUtilities_Input'.const.FXS_MOUSE_4:
+		case class'UIUtilities_Input'.const.FXS_KEY_LEFT_SHIFT:
+		case class'UIUtilities_Input'.const.FXS_BUTTON_LBUMPER:
+			// Prevent switching soldiers during AfterAction promotion
+			if( UIAfterAction(Movie.Stack.GetScreen(class'UIAfterAction')) == none )
+				bHandled = false;
+			break;
+		case class'UIUtilities_Input'.const.FXS_BUTTON_B:
+		case class'UIUtilities_Input'.const.FXS_KEY_ESCAPE:
+		case class'UIUtilities_Input'.const.FXS_R_MOUSE_DOWN:
+			OnCancel();
+			break;
+		case class'UIUtilities_Input'.const.FXS_BUTTON_X: // bsg-jrebar (4/21/17): Changed UI flow and button positions per new additions
+			MakePosterButton();
+			break;
+		case class'UIUtilities_Input'.const.FXS_BUTTON_SELECT : // bsg-jrebar (4/21/17): Changed UI flow and button positions per new additions
+			//bsg-hlee (05.09.17): If the nav help does not how up do not allow the button to navigate to the facility. Condition taken from UpdateNavHelp when deciding to add the nav help or not.
+			if( class'UIUtilities_Strategy'.static.GetXComHQ().HasFacilityByName('RecoveryCenter') && IsAllowedToCycleSoldiers() && !`ScreenStack.IsInStack(class'UIFacility_TrainingCenter')
+			&& !`ScreenStack.IsInStack(class'UISquadSelect') && !`ScreenStack.IsInStack(class'UIAfterAction') && GetUnit().GetSoldierClassTemplate().bAllowAWCAbilities)
+				JumpToRecoveryFacility();
 		default:
 			bHandled = false;
 			break;
 	}
 
-	return bHandled || super.OnUnrealCommand(cmd, arg);
+	return bHandled || super(UIArmory).OnUnrealCommand(cmd, arg);
 }
 
 function OnScrollBarChange(float newValue)
@@ -1339,8 +1422,9 @@ simulated function OnReceiveFocus()
 	}
 	else
 	{
-		Navigator.SetSelected(ClassRowItem);
-		ClassRowItem.SetSelectedAbility(1);
+		// Issue #28
+		Navigator.SetSelected(/*ClassRowItem*/);
+		//ClassRowItem.SetSelectedAbility(1);
 	}
 	UpdateNavHelp();
 }
