@@ -487,8 +487,8 @@ simulated function bool OnUnrealCommand(int cmd, int arg)
 		return false;
 	}
 
-	bHandled = Columns[m_iCurrentlySelectedColumn].OnUnrealCommand(cmd, arg); // bsg-nlong (1.25.17): Send the input to the column first and see if it can consume it
-	if (bHandled) return true;
+	// bsg-nlong (1.25.17): Send the input to the column first and see if it can consume it
+	if (Columns[m_iCurrentlySelectedColumn].OnUnrealCommand(cmd, arg)) return true;
 
 	bHandled = true;
 
