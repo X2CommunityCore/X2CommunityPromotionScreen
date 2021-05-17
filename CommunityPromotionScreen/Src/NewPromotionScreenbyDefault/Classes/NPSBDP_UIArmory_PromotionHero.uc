@@ -216,10 +216,10 @@ simulated function PopulateData()
 	
 	AS_SetPathLabels(
 		m_strBranchesLabel,
-		ClassTemplate.AbilityTreeTitles[0 + Position],
-		ClassTemplate.AbilityTreeTitles[1 + Position],
-		ClassTemplate.AbilityTreeTitles[2 + Position],
-		ClassTemplate.AbilityTreeTitles[3 + Position]
+		GetLocalizedAbilityTreeTitle(ClassTemplate, 0 + Position),
+		GetLocalizedAbilityTreeTitle(ClassTemplate, 1 + Position),
+		GetLocalizedAbilityTreeTitle(ClassTemplate, 2 + Position),
+		GetLocalizedAbilityTreeTitle(ClassTemplate, 3 + Position)
 	);
 
 	// Fix None-context
@@ -237,6 +237,51 @@ simulated function PopulateData()
 	
 	RealizeScrollbar();
 	HidePreview();
+}
+
+function string GetLocalizedAbilityTreeTitle(const X2SoldierClassTemplate ClassTemplate, const int iRowIndex)
+{
+	local string strAbilityTreeTitle;
+	local XComLWTuple Tuple;
+
+	if (ClassTemplate.AbilityTreeTitles.Length > iRowIndex)
+	{
+		strAbilityTreeTitle = ClassTemplate.AbilityTreeTitles[iRowIndex];
+	}
+	else if (iRowIndex == 0 && strAbilityTreeTitle == "")
+	{
+		strAbilityTreeTitle = ClassTemplate.LeftAbilityTreeTitle;
+	}
+	else if (iRowIndex == 1 && strAbilityTreeTitle == "")
+	{
+		strAbilityTreeTitle = ClassTemplate.RightAbilityTreeTitle;
+	}
+
+	// Start Issue #22
+	/// Mods can listen to 'OverrideLocalizedAbilityTreeTitle' event to use their own logic 
+	/// to set localized names for ability trees. Typical use case would be adding a localized name
+	/// for a new row of abilities that were dynamically inserted into unit's ability tree.
+	/// iRowIndex begins at 0, starting with the top row, which corresponds to left ability column
+	/// on the "old" promotion screen.
+	///
+	/// ```event
+	/// EventID: OverrideLocalizedAbilityTreeTitle,
+	/// EventData: [in int iRowIndex, inout string strAbilityTreeTitle],
+	/// EventSource: XComGameState_Unit (UnitState),
+	/// NewGameState: none
+	/// ```
+	Tuple = new class'XComLWTuple';
+	Tuple.Id = 'OverrideLocalizedAbilityTreeTitle';
+	Tuple.Data.Add(2);
+	Tuple.Data[0].kind = XComLWTVInt;
+	Tuple.Data[0].i = iRowIndex;
+	Tuple.Data[1].kind = XComLWTVString;
+	Tuple.Data[1].s = strAbilityTreeTitle;
+
+	`XEVENTMGR.TriggerEvent(Tuple.Id, Tuple, GetUnit());
+
+	return Tuple.Data[1].s;
+	// End Issue #22
 }
 
 function HidePreview()
