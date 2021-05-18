@@ -706,50 +706,90 @@ function int GetAbilityPointCost(int Rank, int Branch)
 	local XComGameState_Unit UnitState;
 	local array<SoldierClassAbilityType> AbilityTree;
 	local bool bPowerfulAbility;
+	local bool bColonelRankPlusAbility; // Whether this ability is at the Colonel rank or later.
+	local bool bNonClassAbility; // Rough equivalent of "XCOM row" abilities for regular soldier classes.
+	local bool bAsResistanceHero;
 	local int AbilityRanks; //Rank is 0 indexed but AbilityRanks is not. This means a >= comparison requies no further adjustments
-	local int AbilityCost;
+	local int iAbilityCost;
+	local XComLWTuple Tuple; // Tuple for Issue #10
 
 	UnitState = GetUnit();
 	AbilityTree = UnitState.GetRankAbilities(Rank);	
-
-	if (GetCustomAbilityCost(UnitState, AbilityTree[Branch].AbilityName, AbilityCost))
-	{
-		return AbilityCost;
-	}
-
 	AbilityRanks = GetAbilitiesPerRank(UnitState);
-	if (!UnitState.IsResistanceHero() && AbilityRanks != 0)
-	{
-		if (!UnitState.HasPurchasedPerkAtRank(Rank) && Branch < AbilityRanks)
-		{
-			// If this is a base game soldier with a promotion available, ability costs nothing since it would be their
-			// free promotion ability if they "bought" it through the Armory
-			return 0;
-		}
-	}
+	bPowerfulAbility = class'X2StrategyGameRulesetDataStructures'.default.PowerfulAbilities.Find(AbilityTree[Branch].AbilityName) != INDEX_NONE;
+	bColonelRankPlusAbility = Rank >= 6; // Matches base game behavior
+	bNonClassAbility = Branch >= AbilityRanks; // This will be "false" for 4th row of abilities for base WOTC Faction Heroes, since they have a randomized deck of perks, not a "true" XCOM row.
+	bAsResistanceHero = UnitState.IsResistanceHero() || AbilityRanks == 0;
 
-	bPowerfulAbility = (class'X2StrategyGameRulesetDataStructures'.default.PowerfulAbilities.Find(AbilityTree[Branch].AbilityName) != INDEX_NONE);
-	// Use "poweful ability" cost in following situations:	
-
-	// 1. This is an "AWC" (XCOM row) ability:
-	if (bPowerfulAbility && Branch >= AbilityRanks)
+	if (GetCustomAbilityCost(UnitState, AbilityTree[Branch].AbilityName, iAbilityCost))
 	{
-		AbilityCost = class'X2StrategyGameRulesetDataStructures'.default.PowerfulAbilityPointCost;
+		// Do nothing, iAbilityCost will already hold the config value.
 	}
-
-	// 2. All Colonel level abilities for emulated Faction Heroes and any powerful XCOM abilities have increased cost for Faction Heroes
-	if (AbilityRanks == 0 && (bPowerfulAbility || (Rank >= 6 && Branch < 3)) && !HasBrigadierRank())
+	else if (!bAsResistanceHero && !bNonClassAbility && !UnitState.HasPurchasedPerkAtRank(Rank, AbilityRanks))
 	{
-		return class'X2StrategyGameRulesetDataStructures'.default.PowerfulAbilityPointCost;
+		// If this is a base game soldier with a promotion available, ability costs nothing.
+		iAbilityCost = 0;
 	}
-
-	// 3. All Colonel level abilities for Faction Heroes and any powerful XCOM abilities have increased cost for Faction Heroes
-	if (UnitState.IsResistanceHero() && (bPowerfulAbility || (Rank >= 6 && Branch < 3)) && !HasBrigadierRank())
+	else if (bNonClassAbility && bPowerfulAbility)
 	{
-		return class'X2StrategyGameRulesetDataStructures'.default.PowerfulAbilityPointCost;
+		// Ability Cost is increased for "powerful" abilities in XCOM row of regular soldiers, 		
+		iAbilityCost = class'X2StrategyGameRulesetDataStructures'.default.PowerfulAbilityPointCost;
 	}
+	else if (bAsResistanceHero && bPowerfulAbility)
+	{
+		// or anywhere in the Faction Heroes' ability tree.	
+		iAbilityCost = class'X2StrategyGameRulesetDataStructures'.default.PowerfulAbilityPointCost;
+	}
+	else if (bAsResistanceHero && bColonelRankPlusAbility && !HasBrigadierRank())
+	{
+		// Colonel+ rank abilities of Faction Heroes have increased cost as well, 
+		// unless the class has a Brigadier Rank, in which case we default to 
+		// configuration array of ability costs.
+		iAbilityCost = class'X2StrategyGameRulesetDataStructures'.default.PowerfulAbilityPointCost;
+	}
+	else
+	{
+		iAbilityCost = GetDefaultAbilityPointCostForRank(Rank);
+	}	
+
+	// Start Issue #10
+	/// Mods can listen to 'OverrideAbilityPointCost' event to use their own logic 
+	/// to determine abiility point cost for this particular unit and this particular ability.
+	/// It can be used to reduce ability point cost to 0, if necessary.
+	/// Rank and Row begin their count at 0, in the upper left corner of the promotion screen.
+	///
+	/// ```event
+	/// EventID: OverrideAbilityPointCost,
+	/// EventData: [in name AbilityTemplateName, in int Rank, in int Row, inout int iAbilityCost],
+	/// EventSource: XComGameState_Unit (UnitState),
+	/// NewGameState: none
+	/// ```
+	Tuple = new class'XComLWTuple';
+	Tuple.Id = 'OverrideAbilityPointCost';
+	Tuple.Data.Add(4);
+	Tuple.Data[0].kind = XComLWTVName;
+	Tuple.Data[0].n = AbilityTree[Branch].AbilityName;
+	Tuple.Data[1].kind = XComLWTVInt;
+	Tuple.Data[1].i = Rank;
+	Tuple.Data[2].kind = XComLWTVInt;
+	Tuple.Data[2].i = Branch;
+	Tuple.Data[3].kind = XComLWTVInt;
+	Tuple.Data[3].i = iAbilityCost;
+
+	`XEVENTMGR.TriggerEvent(Tuple.Id, Tuple, UnitState);
 	
-	// Otherwise use default ability cost.
+	return Tuple.Data[3].i;
+	// End Issue #10
+}
+
+final function int GetDefaultAbilityPointCostForRank(const int Rank)
+{
+	// Failsafe in case there are more soldier ranks than there are configured costs for.
+	if (Rank >= class'X2StrategyGameRulesetDataStructures'.default.AbilityPointCosts.Length)
+	{
+		// Then we simply use the final configured member of the array.
+		return class'X2StrategyGameRulesetDataStructures'.default.AbilityPointCosts[class'X2StrategyGameRulesetDataStructures'.default.AbilityPointCosts.Length - 1];
+	}
 	return class'X2StrategyGameRulesetDataStructures'.default.AbilityPointCosts[Rank];
 }
 
