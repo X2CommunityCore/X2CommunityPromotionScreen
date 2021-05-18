@@ -606,11 +606,13 @@ function bool CanPurchaseAbility(int Rank, int Branch, name AbilityName)
 	return CanPurchaseAbilityEx(Rank, Branch, AbilityName, DummyString);
 }
 
-// Issue #7: Include the reason why an ability was locked in `ReasonLockedText`
-function bool CanPurchaseAbilityEx(int Rank, int Branch, name AbilityName, out string ReasonLockedText)
+// Issue #7: Include the reason why an ability was locked in `strLocReasonLocked`
+function bool CanPurchaseAbilityEx(int Rank, int Branch, name AbilityName, out string strLocReasonLocked)
 {
 	local XComGameState_Unit UnitState;
 	local int AbilityRanks; //Rank is 0 indexed but AbilityRanks is not. This means a >= comparison requires no further adjustments
+	local XComLWTuple Tuple; // Tuple for Issue #3	
+	local name nReasonLocked;
 	
 	UnitState = GetUnit();
 	AbilityRanks = GetAbilitiesPerRank(UnitState);
@@ -620,35 +622,83 @@ function bool CanPurchaseAbilityEx(int Rank, int Branch, name AbilityName, out s
 		// Don't allow non hero units to purchase abilities with AP without a training center
 		// The branch is checked here so that "No Training Center" takes priority over "No
 		// class perk picked" as a reason.
-		if((UnitState.HasPurchasedPerkAtRank(Rank) || Branch >= AbilityRanks) && !UnitState.IsResistanceHero() && !CanSpendAP())
+		if ((UnitState.HasPurchasedPerkAtRank(Rank) || Branch >= AbilityRanks) && !UnitState.IsResistanceHero() && !CanSpendAP())
 		{
-			ReasonLockedText = ReasonNoTrainingCenter;
-			return false;
-		}
-
-		// Don't allow non hero units to purchase abilities on the xcom perk row before getting a rankup perk
-		if(!UnitState.HasPurchasedPerkAtRank(Rank) && !UnitState.IsResistanceHero() && Branch >= AbilityRanks )
+			strLocReasonLocked = ReasonNoTrainingCenter;
+			nReasonLocked = 'NoTrainingCenter';
+		} // Don't allow non hero units to purchase abilities on the xcom perk row before getting a rankup perk
+		else if (!UnitState.HasPurchasedPerkAtRank(Rank) && !UnitState.IsResistanceHero() && Branch >= AbilityRanks )
 		{
-			ReasonLockedText = ReasonNoClassPerkPurchased;
-			return false;
+			strLocReasonLocked = ReasonNoClassPerkPurchased;
+			nReasonLocked = 'NoClassPerkPurchased';
 		}
-	}
-
-	// Normal behaviour and hero promotion emulation (ability ranks == 0)
-	if (Rank >= UnitState.GetRank())
+	} // Normal behaviour and hero promotion emulation (ability ranks == 0)
+	else if (Rank >= UnitState.GetRank())
 	{
-		ReasonLockedText = ReasonNotHighEnoughRank;
+		strLocReasonLocked = ReasonNotHighEnoughRank;
+		nReasonLocked = 'NotHighEnoughRank';
 	}
 	else if (!CanAffordAbility(Rank, Branch))
 	{
-		ReasonLockedText = ReasonNotEnoughAP;
+		strLocReasonLocked = ReasonNotEnoughAP;
+		nReasonLocked = 'NotEnoughAP';
 	}
 	else if (!UnitState.MeetsAbilityPrerequisites(AbilityName))
 	{
-		ReasonLockedText = ReasonLacksPrerequisites;
+		strLocReasonLocked = ReasonLacksPrerequisites;
+		nReasonLocked = 'LacksPrerequisites';
 	}
 
-	return ReasonLockedText == "";
+	// Start Issue #3
+	/// Mods can listen to the 'OverrideCanPurchaseAbility' event to use their own logic 
+	/// to determine whether this particular unit should be able to unlock this particular ability.
+	/// Tuple passes:
+	/// Rank and Row properties start at 0, which corresponds to the upper left corner of the promotion screen.
+	/// strLocReasonLocked - localized string that will be displayed as a reason why this ability cannot be unlocked.
+	/// nReasonLocked is passed in the Tuple so mods can see *why* CPSs considers this ability cannot be unlocked
+	/// without having to check the strLocReasonLocked localized string.
+	/// nReasonLocked can take the following values: 
+	///  - 'NoTrainingCenter'
+	///  - 'NoClassPerkPurchased' - soldiers of regular classes must select their class perk for this rank before they are allowed to unlock non-class (XCOM row) abilities.
+	///  - 'NotHighEnoughRank'
+	///  - 'NotEnoughAP'
+	///  - 'LacksPrerequisites' - this will also be `true` in case of mutually exclusive ability being unlocked.
+	/// Whether the ability will be locked or not will be determined by bCanPurchaseAbility property, 
+	/// so it's possible to lock an ability without providing a reason for it, if necessary.
+	///```event
+	/// EventID: OverrideCanPurchaseAbility,
+	/// EventData: [in name AbilityTemplateName, in int Rank, in int Row, in name nReasonLocked, inout string strLocReasonLocked, inout bool bCanPurchaseAbility],
+	/// EventSource: XComGameState_Unit (UnitState),
+	/// NewGameState: none
+	///```
+	Tuple = new class'XComLWTuple';
+	Tuple.Id = 'OverrideCanPurchaseAbility';
+	Tuple.Data.Add(6);
+	Tuple.Data[0].kind = XComLWTVName;
+	Tuple.Data[0].n = AbilityName;
+	Tuple.Data[1].kind = XComLWTVInt;
+	Tuple.Data[1].i = Rank;
+	Tuple.Data[2].kind = XComLWTVInt;
+	Tuple.Data[2].i = Branch;
+	Tuple.Data[3].kind = XComLWTVString;
+	Tuple.Data[3].s = strLocReasonLocked;
+	Tuple.Data[4].kind = XComLWTVName;
+	Tuple.Data[4].n = nReasonLocked;
+	Tuple.Data[5].kind = XComLWTVBool;
+	Tuple.Data[5].b = nReasonLocked == ''; // bCanPurchaseAbility
+
+	`XEVENTMGR.TriggerEvent(Tuple.Id, Tuple, UnitState);
+
+	if (Tuple.Data[5].b)
+	{
+		strLocReasonLocked = "";
+	}
+	else
+	{
+		strLocReasonLocked = Tuple.Data[3].s;
+	}
+	return Tuple.Data[5].b; 
+	// End Issue #3
 }
 
 function int GetAbilityPointCost(int Rank, int Branch)
