@@ -38,13 +38,21 @@ var int AdjustXOffset;
 
 var localized string m_strMutuallyExclusive;
 
+// Start Issue #24
+// Cached Soldier Info
+var bool					bHasBrigadierRank;
+var bool					bAsResistanceHero;	// Whether this unit uses the Faction Hero promotion scheme, where they have to pay AP for each ability.
+var int						AbilitiesPerRank;	// Number of ability rows in soldier class template, not counting the "XCOM" row for regular soldiers. 
+var X2SoldierClassTemplate	ClassTemplate;
+// End Issue #24
+
 simulated function OnInit()
 {
 	super.OnInit();
 
 	`LOG(self.Class.name @ GetFuncName(), bLog, 'PromotionScreen');
 
-	if (HasBrigadierRank())
+	if (bHasBrigadierRank)
 	{
 		ResizeScreenForBrigadierRank();
 		AnimatIn();
@@ -90,6 +98,8 @@ simulated function InitPromotion(StateObjectReference UnitRef, optional bool bIn
 
 	super.InitArmory(UnitRef, , , , , , bInstantTransition);
 
+	CacheSoldierInfo(); // Issue #24
+
 	InitColumns();
 
 	PopulateData();
@@ -97,7 +107,7 @@ simulated function InitPromotion(StateObjectReference UnitRef, optional bool bIn
 	//Only set position and animate in the scrollbar once after data population. Prevents scrollbar flicker on scrolling.
 	if (Scrollbar != none)
 	{
-		if (HasBrigadierRank())
+		if (bHasBrigadierRank)
 		{
 			Scrollbar.SetPosition(-465, 310);
 		}
@@ -136,12 +146,24 @@ simulated function SetUnitReference(StateObjectReference NewUnitRef)
 	// Reset these values when we cycle to another soldier
 	Position = 0;
 	MaxPosition = 0;
+	CacheSoldierInfo(); // Issue #24
+}
+
+function CacheSoldierInfo()
+{
+	local XComGameState_Unit Unit;
+
+	Unit = GetUnit();
+
+	bHasBrigadierRank = Unit.AbilityTree.Length > 7;
+	GetAbilitiesPerRank();
+	bAsResistanceHero = Unit.IsResistanceHero() || AbilitiesPerRank == 0;
+	ClassTemplate = Unit.GetSoldierClassTemplate();
 }
 
 simulated function PopulateData()
 {
 	local XComGameState_Unit Unit;
-	local X2SoldierClassTemplate ClassTemplate;
 	local NPSBDP_UIArmory_PromotionHeroColumn Column;
 	local string HeaderString, rankIcon, classIcon;
 	local int iRank, maxRank;
@@ -154,7 +176,6 @@ simulated function PopulateData()
 	local XComGameState NewGameState;
 
 	Unit = GetUnit();
-	ClassTemplate = Unit.GetSoldierClassTemplate();
 
 	FactionState = Unit.GetResistanceFaction();
 	
@@ -226,10 +247,10 @@ simulated function PopulateData()
 	
 	AS_SetPathLabels(
 		m_strBranchesLabel,
-		GetLocalizedAbilityTreeTitle(ClassTemplate, 0 + Position),
-		GetLocalizedAbilityTreeTitle(ClassTemplate, 1 + Position),
-		GetLocalizedAbilityTreeTitle(ClassTemplate, 2 + Position),
-		GetLocalizedAbilityTreeTitle(ClassTemplate, 3 + Position)
+		GetLocalizedAbilityTreeTitle(0 + Position),
+		GetLocalizedAbilityTreeTitle(1 + Position),
+		GetLocalizedAbilityTreeTitle(2 + Position),
+		GetLocalizedAbilityTreeTitle(3 + Position)
 	);
 
 	// Fix None-context
@@ -249,7 +270,7 @@ simulated function PopulateData()
 	HidePreview();
 }
 
-function string GetLocalizedAbilityTreeTitle(const X2SoldierClassTemplate ClassTemplate, const int iRowIndex)
+function string GetLocalizedAbilityTreeTitle(const int iRowIndex)
 {
 	local string strAbilityTreeTitle;
 	local XComLWTuple Tuple;
@@ -308,17 +329,6 @@ function HidePreview()
 
 	// By default when not previewing an ability, display class data
 	AS_SetDescriptionData("", ClassName, ClassDesc, "", "", "", "");
-}
-
-function bool HasBrigadierRank()
-{
-	local XComGameState_Unit Unit;
-	
-	Unit = GetUnit();
-	
-	`LOG(self.Class.name @ GetFuncName() @ Unit.GetFullName() @ Unit.AbilityTree.Length, bLog, 'PromotionScreen');
-
-	return Unit.AbilityTree.Length > 7;
 }
 
 function bool UpdateAbilityIcons_Override(out NPSBDP_UIArmory_PromotionHeroColumn Column)
@@ -587,7 +597,7 @@ function InitColumns()
 	local NPSBDP_UIArmory_PromotionHeroColumn Column;
 	local int i, numCols;
 
-	numCols = HasBrigadierRank() ? 8 : 7;
+	numCols = bHasBrigadierRank ? 8 : 7;
 
 	Columns.Length = 0;
 
@@ -610,43 +620,52 @@ function bool CanPurchaseAbility(int Rank, int Branch, name AbilityName)
 function bool CanPurchaseAbilityEx(int Rank, int Branch, name AbilityName, out string strLocReasonLocked)
 {
 	local XComGameState_Unit UnitState;
-	local int AbilityRanks; //Rank is 0 indexed but AbilityRanks is not. This means a >= comparison requires no further adjustments
 	local XComLWTuple Tuple; // Tuple for Issue #3	
 	local name nReasonLocked;
+	local bool bNonClassAbility;
 	
 	UnitState = GetUnit();
-	AbilityRanks = GetAbilitiesPerRank(UnitState);
-
-	if (AbilityRanks > 0)
+	bNonClassAbility = Branch >= AbilitiesPerRank;
+	
+	if (!bAsResistanceHero)
 	{
-		// Don't allow non hero units to purchase abilities with AP without a training center
-		// The branch is checked here so that "No Training Center" takes priority over "No
-		// class perk picked" as a reason.
-		if ((UnitState.HasPurchasedPerkAtRank(Rank) || Branch >= AbilityRanks) && !UnitState.IsResistanceHero() && !CanSpendAP())
+		if (UnitState.HasPurchasedPerkAtRank(Rank, AbilitiesPerRank) && !CanSpendAP())
 		{
+			// Don't allow non hero units to purchase additional abilities with AP without a training center.
 			strLocReasonLocked = ReasonNoTrainingCenter;
 			nReasonLocked = 'NoTrainingCenter';
-		} // Don't allow non hero units to purchase abilities on the xcom perk row before getting a rankup perk
-		else if (!UnitState.HasPurchasedPerkAtRank(Rank) && !UnitState.IsResistanceHero() && Branch >= AbilityRanks )
+		} 
+		else if (bNonClassAbility && !CanSpendAP())
 		{
+			// Same for abilities on the "XCOM" perk row.
+			strLocReasonLocked = ReasonNoTrainingCenter;
+			nReasonLocked = 'NoTrainingCenter';
+		}
+		else if (!UnitState.HasPurchasedPerkAtRank(Rank, AbilitiesPerRank) && bNonClassAbility)
+		{
+			// Don't allow non hero units to purchase abilities on the "XCOM" perk row before getting a rankup perk.
 			strLocReasonLocked = ReasonNoClassPerkPurchased;
 			nReasonLocked = 'NoClassPerkPurchased';
 		}
-	} // Normal behaviour and hero promotion emulation (ability ranks == 0)
-	else if (Rank >= UnitState.GetRank())
+	} 
+	
+	if (nReasonLocked == '')
 	{
-		strLocReasonLocked = ReasonNotHighEnoughRank;
-		nReasonLocked = 'NotHighEnoughRank';
-	}
-	else if (!CanAffordAbility(Rank, Branch))
-	{
-		strLocReasonLocked = ReasonNotEnoughAP;
-		nReasonLocked = 'NotEnoughAP';
-	}
-	else if (!UnitState.MeetsAbilityPrerequisites(AbilityName))
-	{
-		strLocReasonLocked = ReasonLacksPrerequisites;
-		nReasonLocked = 'LacksPrerequisites';
+		if (Rank >= UnitState.GetRank())
+		{
+			strLocReasonLocked = ReasonNotHighEnoughRank;
+			nReasonLocked = 'NotHighEnoughRank';
+		}
+		else if (!CanAffordAbility(Rank, Branch))
+		{
+			strLocReasonLocked = ReasonNotEnoughAP;
+			nReasonLocked = 'NotEnoughAP';
+		}
+		else if (!UnitState.MeetsAbilityPrerequisites(AbilityName))
+		{
+			strLocReasonLocked = ReasonLacksPrerequisites;
+			nReasonLocked = 'LacksPrerequisites';
+		}
 	}
 
 	// Start Issue #3
@@ -708,24 +727,20 @@ function int GetAbilityPointCost(int Rank, int Branch)
 	local bool bPowerfulAbility;
 	local bool bColonelRankPlusAbility; // Whether this ability is at the Colonel rank or later.
 	local bool bNonClassAbility; // Rough equivalent of "XCOM row" abilities for regular soldier classes.
-	local bool bAsResistanceHero;
-	local int AbilityRanks; //Rank is 0 indexed but AbilityRanks is not. This means a >= comparison requies no further adjustments
 	local int iAbilityCost;
 	local XComLWTuple Tuple; // Tuple for Issue #10
 
 	UnitState = GetUnit();
 	AbilityTree = UnitState.GetRankAbilities(Rank);	
-	AbilityRanks = GetAbilitiesPerRank(UnitState);
 	bPowerfulAbility = class'X2StrategyGameRulesetDataStructures'.default.PowerfulAbilities.Find(AbilityTree[Branch].AbilityName) != INDEX_NONE;
 	bColonelRankPlusAbility = Rank >= 6; // Matches base game behavior
-	bNonClassAbility = Branch >= AbilityRanks; // This will be "false" for 4th row of abilities for base WOTC Faction Heroes, since they have a randomized deck of perks, not a "true" XCOM row.
-	bAsResistanceHero = UnitState.IsResistanceHero() || AbilityRanks == 0;
+	bNonClassAbility = Branch >= AbilitiesPerRank; // This will be "false" for 4th row of abilities for base WOTC Faction Heroes, since they have a randomized deck of perks, not a "true" XCOM row.
 
 	if (GetCustomAbilityCost(UnitState, AbilityTree[Branch].AbilityName, iAbilityCost))
 	{
 		// Do nothing, iAbilityCost will already hold the config value.
 	}
-	else if (!bAsResistanceHero && !bNonClassAbility && !UnitState.HasPurchasedPerkAtRank(Rank, AbilityRanks))
+	else if (!bAsResistanceHero && !bNonClassAbility && !UnitState.HasPurchasedPerkAtRank(Rank, AbilitiesPerRank))
 	{
 		// If this is a base game soldier with a promotion available, ability costs nothing.
 		iAbilityCost = 0;
@@ -740,7 +755,7 @@ function int GetAbilityPointCost(int Rank, int Branch)
 		// or anywhere in the Faction Heroes' ability tree.	
 		iAbilityCost = class'X2StrategyGameRulesetDataStructures'.default.PowerfulAbilityPointCost;
 	}
-	else if (bAsResistanceHero && bColonelRankPlusAbility && !HasBrigadierRank())
+	else if (bAsResistanceHero && bColonelRankPlusAbility && !bHasBrigadierRank)
 	{
 		// Colonel+ rank abilities of Faction Heroes have increased cost as well, 
 		// unless the class has a Brigadier Rank, in which case we default to 
@@ -795,14 +810,11 @@ final function int GetDefaultAbilityPointCostForRank(const int Rank)
 
 function bool GetCustomAbilityCost(const XComGameState_Unit UnitState, const name AbilityName, out int AbilityCost)
 {
-	local name ClassName;
 	local int i;
-
-	ClassName = UnitState.GetSoldierClassTemplateName();
 
 	for (i = 0; i < ClassCustomAbilityCost.Length; i++)
 	{
-		if (ClassCustomAbilityCost[i].ClassName == ClassName && ClassCustomAbilityCost[i].AbilityName == AbilityName)
+		if (ClassCustomAbilityCost[i].ClassName == ClassTemplate.DataName && ClassCustomAbilityCost[i].AbilityName == AbilityName)
 		{
 			AbilityCost = ClassCustomAbilityCost[i].AbilityCost;
 			return true;
@@ -1022,18 +1034,16 @@ function bool CanSpendAP()
 	return `XCOMHQ.HasFacilityByName('RecoveryCenter');
 }
 
-function int GetAbilitiesPerRank(const XComGameState_Unit UnitState)
+function GetAbilitiesPerRank()
 {	
-	local X2SoldierClassTemplate ClassTemplate;
-    local int AbilitiesPerRank;
 	local int RankIndex;
 
-	if (GetCustomAbilitiesPerRank(UnitState, AbilitiesPerRank))
-	{
-		return AbilitiesPerRank;
-	}
+	AbilitiesPerRank = 0;
 
-	ClassTemplate = UnitState.GetSoldierClassTemplate();
+	if (GetCustomAbilitiesPerRank())
+	{
+		return;
+	}
 
 	// Start with RankIndex = 1 so we don't count squaddie perks.
 	// Main purpose of this function is to figure out the placement of the XCOM perk row
@@ -1041,15 +1051,13 @@ function int GetAbilitiesPerRank(const XComGameState_Unit UnitState)
 	{
 		AbilitiesPerRank = Max(AbilitiesPerRank, ClassTemplate.GetAbilitySlots(RankIndex).Length);
 	}
-
-	return AbilitiesPerRank;
 }
 
-function bool GetCustomAbilitiesPerRank(const XComGameState_Unit UnitState, out int AbilitiesPerRank)
+function bool GetCustomAbilitiesPerRank()
 {
 	local int Index;
 
-	Index = ClassAbilitiesPerRank.Find('ClassName', UnitState.GetSoldierClassTemplateName());
+	Index = ClassAbilitiesPerRank.Find('ClassName', ClassTemplate.DataName);
 	if (Index != INDEX_NONE)
 	{
 		AbilitiesPerRank = ClassAbilitiesPerRank[Index].AbilitiesPerRank;
@@ -1285,4 +1293,16 @@ simulated function AddChildTweenBetween(string ChildPath, String Prop, float Sta
 	}
 
 	MC.EndOp();
+}
+
+// Deprecated by Issue #24
+function bool HasBrigadierRank()
+{
+	local XComGameState_Unit Unit;
+	
+	Unit = GetUnit();
+	
+	`LOG(self.Class.name @ GetFuncName() @ Unit.GetFullName() @ Unit.AbilityTree.Length, bLog, 'PromotionScreen');
+
+	return Unit.AbilityTree.Length > 7;
 }
