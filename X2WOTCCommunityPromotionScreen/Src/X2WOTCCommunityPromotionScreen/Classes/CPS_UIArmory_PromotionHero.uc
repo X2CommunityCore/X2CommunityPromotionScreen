@@ -1,26 +1,15 @@
-class NPSBDP_UIArmory_PromotionHero extends UIArmory_PromotionHero config(PromotionUIMod);
+//---------------------------------------------------------------------------------------
+//  FILE:    CPS_UIArmory_PromotionHero.uc
+//  AUTHORS: Tzarnal - MoonWolf, Peter Ledbrook, Iridar
+//  PURPOSE: Replaces promotion screen for regular soldiers and faction heroes with a
+//           faction hero-style promotion screen with expanded functionality and 
+//			 customizability.
+//---------------------------------------------------------------------------------------
+class CPS_UIArmory_PromotionHero extends UIArmory_PromotionHero config(PromotionUIMod);
 
 var UIScrollbar	Scrollbar;
 
-struct CustomClassAbilitiesPerRank
-{
-	var name ClassName;
-	var int AbilitiesPerRank;
-};
-
-struct CustomClassAbilityCost
-{
-	var name ClassName;
-	var name AbilityName;
-	var int AbilityCost;
-};
-
 var config bool bLog;
-var config bool APRequiresTrainingCenter;
-var config bool RevealAllAbilities;
-
-var config array<CustomClassAbilitiesPerRank> ClassAbilitiesPerRank;
-var config array<CustomClassAbilityCost> ClassCustomAbilityCost;
 
 // Vars for Issue #7
 var localized string ReasonLacksPrerequisites;
@@ -370,7 +359,7 @@ function bool UpdateAbilityIcons_Override(out NPSBDP_UIArmory_PromotionHeroColum
 			}
 
 			// The unit is not yet at the rank needed for this column
-			if (!RevealAllAbilities && Column.Rank >= Unit.GetRank())
+			if (!class'NPSBDP_UIArmory_PromotionHero'.default.RevealAllAbilities && Column.Rank >= Unit.GetRank())
 			{
 				AbilityName = class'UIUtilities_Text'.static.GetColoredText(m_strAbilityLockedTitle, eUIState_Disabled);
 				AbilityIcon = class'UIUtilities_Image'.const.UnknownAbilityIcon;
@@ -812,11 +801,12 @@ function bool GetCustomAbilityCost(const XComGameState_Unit UnitState, const nam
 {
 	local int i;
 
-	for (i = 0; i < ClassCustomAbilityCost.Length; i++)
+	for (i = 0; i < class'NPSBDP_UIArmory_PromotionHero'.default.ClassCustomAbilityCost.Length; i++)
 	{
-		if (ClassCustomAbilityCost[i].ClassName == ClassTemplate.DataName && ClassCustomAbilityCost[i].AbilityName == AbilityName)
+		if (class'NPSBDP_UIArmory_PromotionHero'.default.ClassCustomAbilityCost[i].ClassName == ClassTemplate.DataName && 
+			class'NPSBDP_UIArmory_PromotionHero'.default.ClassCustomAbilityCost[i].AbilityName == AbilityName)
 		{
-			AbilityCost = ClassCustomAbilityCost[i].AbilityCost;
+			AbilityCost = class'NPSBDP_UIArmory_PromotionHero'.default.ClassCustomAbilityCost[i].AbilityCost;
 			return true;
 		}
 	}
@@ -848,7 +838,7 @@ function PreviewAbility(int Rank, int Branch)
 		AbilityCost = class'UIUtilities_Text'.static.GetColoredText(AbilityCost, eUIState_Bad);
 	}
 		
-	if (!RevealAllAbilities && Rank >= Unit.GetRank())
+	if (!class'NPSBDP_UIArmory_PromotionHero'.default.RevealAllAbilities && Rank >= Unit.GetRank())
 	{
 		AbilityIcon = class'UIUtilities_Image'.const.LockedAbilityIcon;
 		AbilityName = class'UIUtilities_Text'.static.GetColoredText(m_strAbilityLockedTitle, eUIState_Disabled);
@@ -1028,7 +1018,7 @@ simulated function string GetPromotionBlueprintTag(StateObjectReference UnitRef)
 
 function bool CanSpendAP()
 {
-	if(APRequiresTrainingCenter == false)
+	if(!class'NPSBDP_UIArmory_PromotionHero'.default.APRequiresTrainingCenter)
 		return true;
 	
 	return `XCOMHQ.HasFacilityByName('RecoveryCenter');
@@ -1057,10 +1047,10 @@ function bool GetCustomAbilitiesPerRank()
 {
 	local int Index;
 
-	Index = ClassAbilitiesPerRank.Find('ClassName', ClassTemplate.DataName);
+	Index = class'NPSBDP_UIArmory_PromotionHero'.default.ClassAbilitiesPerRank.Find('ClassName', ClassTemplate.DataName);
 	if (Index != INDEX_NONE)
 	{
-		AbilitiesPerRank = ClassAbilitiesPerRank[Index].AbilitiesPerRank;
+		AbilitiesPerRank = class'NPSBDP_UIArmory_PromotionHero'.default.ClassAbilitiesPerRank[Index].AbilitiesPerRank;
 		return true;
 	}
 	return false;

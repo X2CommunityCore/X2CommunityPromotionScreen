@@ -19,9 +19,12 @@ static function CHEventListenerTemplate CreateListeners()
 {
 	local CHEventListenerTemplate Template;
 
-	`CREATE_X2TEMPLATE(class'CHEventListenerTemplate', Template, 'PromotionScreenListeners');
-	Template.AddCHEvent('OverridePromotionBlueprintTagPrefix', OverridePromotionBlueprintTagPrefix, ELD_Immediate);
-	Template.AddCHEvent('OverridePromotionUIClass', OverridePromotionUIClass, ELD_Immediate);
+	`CREATE_X2TEMPLATE(class'CHEventListenerTemplate', Template, 'X2WOTCCPS_PromotionScreenListeners');
+
+	// Set priority below default, so that if a mod wants to use a custom promotion screen under specific circumstances, 
+	// they can do so even with default priority.
+	Template.AddCHEvent('OverridePromotionBlueprintTagPrefix', OverridePromotionBlueprintTagPrefix, ELD_Immediate, 40);
+	Template.AddCHEvent('OverridePromotionUIClass', OverridePromotionUIClass, ELD_Immediate, 40);
 	Template.RegisterInStrategy = true;
 
 	return Template;
@@ -56,9 +59,8 @@ static function EventListenerReturn OverridePromotionBlueprintTagPrefix(
 		return ELR_NoInterrupt;
     }
 
-    if ((UnitState.IsPsiOperative() && ShouldOverridePsiPromotionScreen()) ||
-            (UnitState.IsResistanceHero() && ShouldOverrideHeroPromotionScreen()) ||
-            (!UnitState.IsPsiOperative() && !UnitState.IsResistanceHero() && ShouldOverrideStandardPromotionScreen()))
+	// CPS will change the soldier's position on the promotion screen, unless they are a psi operative.
+    if (!UnitState.IsPsiOperative())
     {
         Tuple.Data[1].s = UnitState.IsGravelyInjured() ?
                 AfterActionScreen.UIBlueprint_PrefixHero_Wounded :
@@ -86,27 +88,11 @@ static function EventListenerReturn OverridePromotionUIClass(
 
     ScreenType = CHLPromotionScreenType(Tuple.Data[0].i);
 
-    if ((ScreenType == eCHLPST_PsiOp && ShouldOverridePsiPromotionScreen()) ||
-            (ScreenType == eCHLPST_Hero && ShouldOverrideHeroPromotionScreen()) ||
-            (ScreenType == eCHLPST_Standard && ShouldOverrideStandardPromotionScreen()))
+	// CPS will always replace standard and hero promotion screens.
+    if (ScreenType == eCHLPST_Hero || ScreenType == eCHLPST_Standard)
     {
-        Tuple.Data[1].o = class'NPSBDP_UIArmory_PromotionHero';
+        Tuple.Data[1].o = class'X2WOTCCommunityPromotionScreen.CPS_UIArmory_PromotionHero';
     }
 
     return ELR_NoInterrupt;
-}
-
-static private function bool ShouldOverridePsiPromotionScreen()
-{
-    return class'NewPromotionScreenByDefault_PromotionScreenListener'.default.IgnoreClassNames.Find('UIArmory_PromotionPsiOp') == INDEX_NONE;
-}
-
-static private function bool ShouldOverrideHeroPromotionScreen()
-{
-    return class'NewPromotionScreenByDefault_PromotionScreenListener'.default.IgnoreClassNames.Find('UIArmory_PromotionHero') == INDEX_NONE;
-}
-
-static private function bool ShouldOverrideStandardPromotionScreen()
-{
-    return class'NewPromotionScreenByDefault_PromotionScreenListener'.default.IgnoreClassNames.Find('UIArmory_Promotion') == INDEX_NONE;
 }

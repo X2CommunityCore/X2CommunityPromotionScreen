@@ -1,26 +1,27 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Default" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <Guid>4e4bb08b-51dc-4cd9-853c-500143efaaf2</Guid>
-    <Name>New Promotion Screen by Default</Name>
-    <Description>Shows the fancy new Hero promotion screen by default even when promoting normal soldiers.</Description>
+    <Guid>e1d5210a-10ce-43dc-a1c8-0edce7d4c712</Guid>
+    <Name>X2WOTCCommunityPromotionScreen</Name>
+    <Description>An improved replacement for [WOTC] New Promotion Screen By Default.</Description>
     <SteamPublishID>0</SteamPublishID>
-    <AssemblyName>CommunityPromotionScreen</AssemblyName>
-    <RootNamespace>CommunityPromotionScreen</RootNamespace>
-    <ProjectGuid>{c635fb6f-86cf-466c-963b-32b2a1f0108b}</ProjectGuid>
+    <AssemblyName>X2WOTCCommunityPromotionScreen</AssemblyName>
+    <RootNamespace>X2WOTCCommunityPromotionScreen</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="Config\" />
     <Folder Include="Localization\" />
     <Folder Include="Src\" />
-    <Folder Include="Src\NewPromotionScreenbyDefault\" />
-    <Folder Include="Src\NewPromotionScreenbyDefault\Classes\" />
+    <Folder Include="Src\NewPromotionScreenbyDefault" />
+    <Folder Include="Src\NewPromotionScreenbyDefault\Classes" />
+    <Folder Include="Src\X2WOTCCommunityPromotionScreen\" />
+    <Folder Include="Src\X2WOTCCommunityPromotionScreen\Classes\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Config\XComPromotionUIMod.ini">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Localization\NewPromotionScreenbyDefault.int">
+    <Content Include="Localization\X2WOTCCommunityPromotionScreen.int">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Localization\XComGame.chn">
@@ -68,8 +69,21 @@
     <Content Include="Src\NewPromotionScreenbyDefault\Classes\NPSBDP_UIArmory_PromotionHeroColumn.uc">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Src\NewPromotionScreenbyDefault\Classes\X2EventListener_PromotionScreenOverrides.uc" />
-    <Content Include="Src\NewPromotionScreenbyDefault\Classes\X2DownloadableContentInfo_NewPromotionScreenbyDefault.uc" />
+    <Content Include="Src\NewPromotionScreenbyDefault\Classes\X2DownloadableContentInfo_NewPromotionScreenbyDefault.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\X2WOTCCommunityPromotionScreen\Classes\CPS_UIArmory_PromotionHero.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\X2WOTCCommunityPromotionScreen\Classes\UIScreen_Dummy.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\X2WOTCCommunityPromotionScreen\Classes\X2DownloadableContentInfo_X2WOTCCommunityPromotionScreen.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\X2WOTCCommunityPromotionScreen\Classes\X2EventListener_PromotionScreenOverrides.uc">
+      <SubType>Content</SubType>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildLocalExtensionPath)\XCOM2.targets" />
 </Project>
