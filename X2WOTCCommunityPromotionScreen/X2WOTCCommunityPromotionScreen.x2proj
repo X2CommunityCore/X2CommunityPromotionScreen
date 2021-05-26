@@ -21,7 +21,37 @@
     <Content Include="Config\XComPromotionUIMod.ini">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Localization\X2WOTCCommunityPromotionScreen.chn">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\X2WOTCCommunityPromotionScreen.cht">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\X2WOTCCommunityPromotionScreen.deu">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\X2WOTCCommunityPromotionScreen.esn">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\X2WOTCCommunityPromotionScreen.fra">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Localization\X2WOTCCommunityPromotionScreen.int">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\X2WOTCCommunityPromotionScreen.ita">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\X2WOTCCommunityPromotionScreen.jpn">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\X2WOTCCommunityPromotionScreen.kor">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\X2WOTCCommunityPromotionScreen.pol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\X2WOTCCommunityPromotionScreen.rus">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Localization\XComGame.chn">
@@ -76,6 +106,9 @@
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\X2WOTCCommunityPromotionScreen\Classes\UIScreen_Dummy.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\X2WOTCCommunityPromotionScreen\Classes\UISL_CPS.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\X2WOTCCommunityPromotionScreen\Classes\X2DownloadableContentInfo_X2WOTCCommunityPromotionScreen.uc">
