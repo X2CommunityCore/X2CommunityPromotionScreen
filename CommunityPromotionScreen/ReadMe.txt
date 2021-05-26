@@ -1,1 +1,0 @@
-﻿Shows the new promotion screen by default even when promoting normal soldiers.

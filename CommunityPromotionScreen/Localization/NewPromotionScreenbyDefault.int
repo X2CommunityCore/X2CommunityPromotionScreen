@@ -1,7 +1,0 @@
-[NPSBDP_UIArmory_PromotionHero]
-m_strMutuallyExclusive = "Mutually exclusive with:"
-ReasonNotEnoughAP = "Not enough Ability Points"
-ReasonLacksPrerequisites = "Prerequisite ability required"
-ReasonNoClassPerkPurchased = "Pick soldier class ability at this rank first"
-ReasonNoTrainingCenter = "Training Center facility required"
-ReasonNotHighEnoughRank = "Higher rank required"
