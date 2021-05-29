@@ -660,52 +660,67 @@ function bool CanPurchaseAbilityEx(int Rank, int Branch, name AbilityName, out s
 	// Start Issue #3
 	/// Mods can listen to the 'OverrideCanPurchaseAbility' event to use their own logic 
 	/// to determine whether this particular unit should be able to unlock this particular ability.
+	///
 	/// Tuple passes:
-	/// Rank and Row properties start at 0, which corresponds to the upper left corner of the promotion screen.
-	/// strLocReasonLocked - localized string that will be displayed as a reason why this ability cannot be unlocked.
-	/// nReasonLocked is passed in the Tuple so mods can see *why* CPSs considers this ability cannot be unlocked
+	/// * Rank and Row properties start at 0, which corresponds to the upper left corner of the promotion screen.
+	/// * AbilitiesPerRank - how many perk rows this soldier class has. 
+	/// The random "XCOM" row added if X2SoldierClassTemplate:bAllowAWCAbilities is true is *not* counted.
+	/// * bAsResistanceHero - whether this unit uses "resistance hero" promotion scheme, where they have to pay AP for each unlocked ability.
+	/// * nReasonLocked is passed in the Tuple so mods can see *why* CPSs considers this ability cannot be unlocked
 	/// without having to check the strLocReasonLocked localized string.
-	/// nReasonLocked can take the following values: 
+	/// * nReasonLocked can take the following values: 
 	///  - 'NoTrainingCenter'
 	///  - 'NoClassPerkPurchased' - soldiers of regular classes must select their class perk for this rank before they are allowed to unlock non-class (XCOM row) abilities.
 	///  - 'NotHighEnoughRank'
 	///  - 'NotEnoughAP'
 	///  - 'LacksPrerequisites' - this will also be `true` in case of mutually exclusive ability being unlocked.
-	/// Whether the ability will be locked or not will be determined by bCanPurchaseAbility property, 
-	/// so it's possible to lock an ability without providing a reason for it, if necessary.
+	/// * strLocReasonLocked - localized string that will be displayed as a reason why this ability cannot be unlocked.
+	/// * bCanPurchaseAbility - determines whether the ability will be locked or not. 
+	/// It's possible to lock an ability without providing a reason for it, if necessary.
+	///
 	///```event
 	/// EventID: OverrideCanPurchaseAbility,
-	/// EventData: [in name AbilityTemplateName, in int Rank, in int Row, in name nReasonLocked, inout string strLocReasonLocked, inout bool bCanPurchaseAbility],
+	/// EventData: [in name AbilityTemplateName, 
+	///				in int Rank, in int Row, 
+	///				in int AbilitiesPerRank, 
+	///				in bool bAsResistanceHero, 
+	///				in name nReasonLocked, 
+	///				inout string strLocReasonLocked, 
+	///				inout bool bCanPurchaseAbility],
 	/// EventSource: XComGameState_Unit (UnitState),
 	/// NewGameState: none
 	///```
 	Tuple = new class'XComLWTuple';
 	Tuple.Id = 'OverrideCanPurchaseAbility';
-	Tuple.Data.Add(6);
+	Tuple.Data.Add(8);
 	Tuple.Data[0].kind = XComLWTVName;
 	Tuple.Data[0].n = AbilityName;
 	Tuple.Data[1].kind = XComLWTVInt;
 	Tuple.Data[1].i = Rank;
 	Tuple.Data[2].kind = XComLWTVInt;
 	Tuple.Data[2].i = Branch;
-	Tuple.Data[3].kind = XComLWTVString;
-	Tuple.Data[3].s = strLocReasonLocked;
-	Tuple.Data[4].kind = XComLWTVName;
-	Tuple.Data[4].n = nReasonLocked;
-	Tuple.Data[5].kind = XComLWTVBool;
-	Tuple.Data[5].b = nReasonLocked == ''; // bCanPurchaseAbility
+	Tuple.Data[3].kind = XComLWTVInt;
+	Tuple.Data[3].i = AbilitiesPerRank;
+	Tuple.Data[4].kind = XComLWTVBool;
+	Tuple.Data[4].b = bAsResistanceHero;
+	Tuple.Data[5].kind = XComLWTVName;
+	Tuple.Data[5].n = nReasonLocked;
+	Tuple.Data[6].kind = XComLWTVString;
+	Tuple.Data[6].s = strLocReasonLocked;
+	Tuple.Data[7].kind = XComLWTVBool;
+	Tuple.Data[7].b = nReasonLocked == ''; // bCanPurchaseAbility
 
 	`XEVENTMGR.TriggerEvent(Tuple.Id, Tuple, UnitState);
 
-	if (Tuple.Data[5].b)
+	if (Tuple.Data[7].b)
 	{
 		strLocReasonLocked = "";
 	}
 	else
 	{
-		strLocReasonLocked = Tuple.Data[3].s;
+		strLocReasonLocked = Tuple.Data[6].s;
 	}
-	return Tuple.Data[5].b; 
+	return Tuple.Data[7].b; 
 	// End Issue #3
 }
 
@@ -764,13 +779,18 @@ function int GetAbilityPointCost(int Rank, int Branch)
 	///
 	/// ```event
 	/// EventID: OverrideAbilityPointCost,
-	/// EventData: [in name AbilityTemplateName, in int Rank, in int Row, inout int iAbilityCost],
+	/// EventData: [in name AbilityTemplateName, 
+	///				in int Rank, 
+	///				in int Row, 
+	///				in int AbilitiesPerRank, 
+	///				in bool bAsResistanceHero, 
+	///				inout int iAbilityCost],
 	/// EventSource: XComGameState_Unit (UnitState),
 	/// NewGameState: none
 	/// ```
 	Tuple = new class'XComLWTuple';
 	Tuple.Id = 'OverrideAbilityPointCost';
-	Tuple.Data.Add(4);
+	Tuple.Data.Add(6);
 	Tuple.Data[0].kind = XComLWTVName;
 	Tuple.Data[0].n = AbilityTree[Branch].AbilityName;
 	Tuple.Data[1].kind = XComLWTVInt;
@@ -778,11 +798,15 @@ function int GetAbilityPointCost(int Rank, int Branch)
 	Tuple.Data[2].kind = XComLWTVInt;
 	Tuple.Data[2].i = Branch;
 	Tuple.Data[3].kind = XComLWTVInt;
-	Tuple.Data[3].i = iAbilityCost;
+	Tuple.Data[3].i = AbilitiesPerRank;
+	Tuple.Data[4].kind = XComLWTVBool;
+	Tuple.Data[4].b = bAsResistanceHero;
+	Tuple.Data[5].kind = XComLWTVInt;
+	Tuple.Data[5].i = iAbilityCost;
 
 	`XEVENTMGR.TriggerEvent(Tuple.Id, Tuple, UnitState);
 	
-	return Tuple.Data[3].i;
+	return Tuple.Data[5].i;
 	// End Issue #10
 }
 
