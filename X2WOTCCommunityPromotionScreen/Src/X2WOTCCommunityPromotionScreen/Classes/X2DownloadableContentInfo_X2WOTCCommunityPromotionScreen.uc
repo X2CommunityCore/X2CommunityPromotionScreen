@@ -58,15 +58,13 @@ static function OnPreCreateTemplates()
 // Start Issue #26
 static final function Neuter_NPSBD_UISL()
 {
-	local NewPromotionScreenByDefault_PromotionScreenListener CDO;
+	local UIScreenListener CDO;
 
-    CDO = NewPromotionScreenByDefault_PromotionScreenListener(class'XComEngine'.static.GetClassDefaultObject(class'NewPromotionScreenbyDefault.NewPromotionScreenByDefault_PromotionScreenListener'));
+    CDO = UIScreenListener(class'XComEngine'.static.GetClassDefaultObject(class'NewPromotionScreenbyDefault.NewPromotionScreenByDefault_PromotionScreenListener'));
     if (CDO != none)
     {
         CDO.ScreenClass = class'UIScreen_Dummy';
     }
-
-	//`LOG("NPSBD is active:" @ IsModActive('NewPromotionScreenbyDefault'),, 'IRITEST');
 }
 // End Issue #26
 
