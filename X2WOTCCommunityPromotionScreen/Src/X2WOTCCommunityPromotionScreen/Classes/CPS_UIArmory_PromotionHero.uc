@@ -156,7 +156,7 @@ simulated function PopulateData()
 	local NPSBDP_UIArmory_PromotionHeroColumn Column;
 	local string HeaderString, rankIcon, classIcon;
 	local int iRank, maxRank;
-	local bool bHasColumnAbility, bHighlightColumn;
+	local bool bHighlightColumn;
 	local Vector ZeroVec;
 	local Rotator UseRot;
 	local XComUnitPawn UnitPawn;
@@ -249,8 +249,12 @@ simulated function PopulateData()
 		Column = NPSBDP_UIArmory_PromotionHeroColumn(Columns[iRank]);		
 		Column.Offset = Position;
 
-		bHasColumnAbility = UpdateAbilityIcons_Override(Column);
-		bHighlightColumn = (!bHasColumnAbility && (iRank+1) == Unit.GetRank());
+		// Start Issue #18 - show "new rank" banner only if the player has an ability to choose and can afford it.
+		//bHasColumnAbility = UpdateAbilityIcons_Override(Column);
+		//bHighlightColumn = (!bHasColumnAbility && (iRank+1) == Unit.GetRank());
+		UpdateAbilityIcons_Override(Column);
+		bHighlightColumn = Unit.HasAvailablePerksToAssign() && (iRank+1) == Unit.GetRank(); 
+		// End Issue #18
 
 		Column.AS_SetData(bHighlightColumn, m_strNewRank, class'UIUtilities_Image'.static.GetRankIcon(iRank+1, ClassTemplate.DataName), Caps(class'X2ExperienceConfig'.static.GetRankName(iRank+1, ClassTemplate.DataName)));
 	}
