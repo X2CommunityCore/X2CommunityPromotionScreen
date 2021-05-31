@@ -188,7 +188,7 @@ simulated function PopulateData()
 		`XEVENTMGR.TriggerEvent('OnHeroPromotionScreen', , , NewGameState);
 		`XCOMGAME.GameRuleset.SubmitGameState(NewGameState);
 	}
-	else if (Unit.GetRank() >= 2 && Unit.ComInt >= eComInt_Gifted)
+	else if (Unit.GetRank() >= 2 && Unit.ComInt >= eComInt_Gifted && !`GETMCMVAR(DISABLE_COMINT_POPUPS))
 	{
 		// Check to see if Unit has high combat intelligence, display tutorial popup if so
 		`HQPRES.UICombatIntelligenceIntro(Unit.GetReference());
@@ -214,7 +214,7 @@ simulated function PopulateData()
 	}
 
 	// Display the "soldier has a new class" popup if required (issue #1)
-	if (Unit.bNeedsNewClassPopup)
+	if (Unit.bNeedsNewClassPopup && !`GETMCMVAR(DISABLE_NEWCLASS_POPUPS))
 	{
 		`HQPRES.UIClassEarned(Unit.GetReference());
 		Unit.bNeedsNewClassPopup = false;  //Prevent from queueing up more of these popups on toggling soldiers.
@@ -1051,7 +1051,7 @@ simulated function string GetPromotionBlueprintTag(StateObjectReference UnitRef)
 
 function bool CanSpendAP()
 {
-	if(!class'NPSBDP_UIArmory_PromotionHero'.default.APRequiresTrainingCenter)
+	if(`GETMCMVAR(DISABLE_TRAINING_CENTER_REQUIREMENT))
 		return true;
 	
 	return `XCOMHQ.HasFacilityByName('RecoveryCenter');
