@@ -621,45 +621,48 @@ function bool CanPurchaseAbilityEx(int Rank, int Branch, name AbilityName, out s
 	
 	UnitState = GetUnit();
 	bNonClassAbility = Branch >= AbilitiesPerRank;
-	
-	if (!bAsResistanceHero)
+
+	if (Rank >= UnitState.GetRank())
 	{
-		if (UnitState.HasPurchasedPerkAtRank(Rank, AbilitiesPerRank) && !CanSpendAP())
+		strLocReasonLocked = ReasonNotHighEnoughRank;
+		nReasonLocked = 'NotHighEnoughRank';
+	}
+	else
+	{
+		if (!bAsResistanceHero)
 		{
-			// Don't allow non hero units to purchase additional abilities with AP without a training center.
-			strLocReasonLocked = ReasonNoTrainingCenter;
-			nReasonLocked = 'NoTrainingCenter';
+			if (UnitState.HasPurchasedPerkAtRank(Rank, AbilitiesPerRank) && !CanSpendAP())
+			{
+				// Don't allow non hero units to purchase additional abilities with AP without a training center.
+				strLocReasonLocked = ReasonNoTrainingCenter;
+				nReasonLocked = 'NoTrainingCenter';
+			} 
+			else if (bNonClassAbility && !CanSpendAP())
+			{
+				// Same for abilities on the "XCOM" perk row.
+				strLocReasonLocked = ReasonNoTrainingCenter;
+				nReasonLocked = 'NoTrainingCenter';
+			}
+			else if (!UnitState.HasPurchasedPerkAtRank(Rank, AbilitiesPerRank) && bNonClassAbility)
+			{
+				// Don't allow non hero units to purchase abilities on the "XCOM" perk row before getting a rankup perk.
+				strLocReasonLocked = ReasonNoClassPerkPurchased;
+				nReasonLocked = 'NoClassPerkPurchased';
+			}
 		} 
-		else if (bNonClassAbility && !CanSpendAP())
-		{
-			// Same for abilities on the "XCOM" perk row.
-			strLocReasonLocked = ReasonNoTrainingCenter;
-			nReasonLocked = 'NoTrainingCenter';
-		}
-		else if (!UnitState.HasPurchasedPerkAtRank(Rank, AbilitiesPerRank) && bNonClassAbility)
-		{
-			// Don't allow non hero units to purchase abilities on the "XCOM" perk row before getting a rankup perk.
-			strLocReasonLocked = ReasonNoClassPerkPurchased;
-			nReasonLocked = 'NoClassPerkPurchased';
-		}
-	} 
 	
-	if (nReasonLocked == '')
-	{
-		if (Rank >= UnitState.GetRank())
+		if (nReasonLocked == '')
 		{
-			strLocReasonLocked = ReasonNotHighEnoughRank;
-			nReasonLocked = 'NotHighEnoughRank';
-		}
-		else if (!CanAffordAbility(Rank, Branch))
-		{
-			strLocReasonLocked = ReasonNotEnoughAP;
-			nReasonLocked = 'NotEnoughAP';
-		}
-		else if (!UnitState.MeetsAbilityPrerequisites(AbilityName))
-		{
-			strLocReasonLocked = ReasonLacksPrerequisites;
-			nReasonLocked = 'LacksPrerequisites';
+			if (!CanAffordAbility(Rank, Branch))
+			{
+				strLocReasonLocked = ReasonNotEnoughAP;
+				nReasonLocked = 'NotEnoughAP';
+			}
+			else if (!UnitState.MeetsAbilityPrerequisites(AbilityName))
+			{
+				strLocReasonLocked = ReasonLacksPrerequisites;
+				nReasonLocked = 'LacksPrerequisites';
+			}
 		}
 	}
 
