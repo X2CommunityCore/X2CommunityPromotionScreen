@@ -9,3 +9,11 @@ ReasonNotHighEnoughRank = "Higher rank required"
 [UISL_CPS]
 strDisablePopup = "DISABLE THIS POP-UP"
 strPopupText = "\nHi, this is your mod, <font color='#00ff00'>[WOTC] Community Promotion Screen</font>.\n\nI see you are using <font color='#ff0000'>[WOTC] New Promotion Screen by Default</font>. It is not necessary.\n\n<font color='#00ff00'>[WOTC] Community Promotion Screen</font> does everything <font color='#ff0000'>[WOTC] New Promotion Screen by Default</font> does and more. \n\nAll mods that require <font color='#ff0000'>[WOTC] New Promotion Screen by Default</font> can work with <font color='#00ff00'>[WOTC] Community Promotion Screen</font> just as well.\n\nYou can disable or uninstall <font color='#ff0000'>[WOTC] New Promotion Screen by Default</font>."
+
+[CPS_MCM_Screen]
+ModName="Community Promotion Screen"
+PageTitle="Community Promotion Screen"
+GroupHeader="General Settings"
+
+SHOW_UNREACHED_PERKS_Label="Display perks from ranks that were not reached yet"
+;SHOW_UNREACHED_PERKS_Tip=""

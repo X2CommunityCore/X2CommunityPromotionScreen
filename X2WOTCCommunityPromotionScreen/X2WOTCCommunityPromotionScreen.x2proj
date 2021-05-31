@@ -12,6 +12,8 @@
     <Folder Include="Config\" />
     <Folder Include="Localization\" />
     <Folder Include="Src\" />
+    <Folder Include="Src\ModConfigMenuAPI\" />
+    <Folder Include="Src\ModConfigMenuAPI\Classes\" />
     <Folder Include="Src\NewPromotionScreenbyDefault" />
     <Folder Include="Src\NewPromotionScreenbyDefault\Classes" />
     <Folder Include="Src\X2WOTCCommunityPromotionScreen\" />
@@ -19,6 +21,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Config\XComPromotionUIMod.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Config\XComX2WOTCCommunityPromotionScreen_DEFAULT.ini">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Localization\X2WOTCCommunityPromotionScreen.chn">
@@ -90,6 +95,48 @@
     <Content Include="Config\XComEngine.ini" />
     <Content Include="Config\XComGame.ini" />
     <Content Include="Localization\XComGame.int" />
+    <Content Include="Src\ModConfigMenuAPI\Classes\MCM_API.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\ModConfigMenuAPI\Classes\MCM_API_Button.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\ModConfigMenuAPI\Classes\MCM_API_Checkbox.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\ModConfigMenuAPI\Classes\MCM_API_Dropdown.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\ModConfigMenuAPI\Classes\MCM_API_Instance.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\ModConfigMenuAPI\Classes\MCM_API_Label.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\ModConfigMenuAPI\Classes\MCM_API_Setting.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\ModConfigMenuAPI\Classes\MCM_API_SettingsGroup.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\ModConfigMenuAPI\Classes\MCM_API_SettingsPage.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\ModConfigMenuAPI\Classes\MCM_API_Slider.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\ModConfigMenuAPI\Classes\MCM_API_Spinner.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\ModConfigMenuAPI\Classes\MCM_OptionsScreen.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\ModConfigMenuAPI\MCM_API_Includes.uci">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\NewPromotionScreenbyDefault\Classes\NewPromotionScreenByDefault_PromotionScreenListener.uc">
       <SubType>Content</SubType>
     </Content>
@@ -117,8 +164,17 @@
     <Content Include="Src\X2WOTCCommunityPromotionScreen\Classes\X2EventListener_PromotionScreenOverrides.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\X2WOTCCommunityPromotionScreen\Classes\CPS_MCM_Defaults.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\X2WOTCCommunityPromotionScreen\Classes\CPS_MCM_Screen.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\X2WOTCCommunityPromotionScreen\Classes\CPS_MCM_ScreenListener.uc">
+      <SubType>Content</SubType>
+    </Content>
   </ItemGroup>
-    <PropertyGroup>
+  <PropertyGroup>
     <SolutionRoot>$(MSBuildProjectDirectory)\..\</SolutionRoot>
     <ScriptsDir>$(SolutionRoot).scripts\</ScriptsDir>
     <BuildCommonRoot>$(ScriptsDir)X2ModBuildCommon\</BuildCommonRoot>
