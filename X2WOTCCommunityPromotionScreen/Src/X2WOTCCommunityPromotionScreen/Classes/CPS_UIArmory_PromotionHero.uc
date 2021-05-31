@@ -168,7 +168,7 @@ simulated function PopulateData()
 
 	FactionState = Unit.GetResistanceFaction();
 	
-	rankIcon = class'UIUtilities_Image'.static.GetRankIcon(Unit.GetRank(), ClassTemplate.DataName);	
+	rankIcon = Unit.GetSoldierRankIcon(Unit.GetRank());
 	classIcon = Unit.GetSoldierClassIcon();
 
 	HeaderString = m_strAbilityHeader;
@@ -256,7 +256,7 @@ simulated function PopulateData()
 		bHighlightColumn = Unit.HasAvailablePerksToAssign() && (iRank+1) == Unit.GetRank(); 
 		// End Issue #18
 
-		Column.AS_SetData(bHighlightColumn, m_strNewRank, class'UIUtilities_Image'.static.GetRankIcon(iRank+1, ClassTemplate.DataName), Caps(class'X2ExperienceConfig'.static.GetRankName(iRank+1, ClassTemplate.DataName)));
+		Column.AS_SetData(bHighlightColumn, m_strNewRank, Unit.GetSoldierRankIcon(iRank+1), Caps(Unit.GetSoldierRankName(iRank+1)));
 	}
 	
 	RealizeScrollbar();
