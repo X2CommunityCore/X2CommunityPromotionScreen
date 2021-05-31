@@ -35,6 +35,8 @@ var int						AbilitiesPerRank;	// Number of ability rows in soldier class templa
 var X2SoldierClassTemplate	ClassTemplate;
 // End Issue #24
 
+`include(X2WOTCCommunityPromotionScreen\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
+
 simulated function OnInit()
 {
 	super.OnInit();
@@ -363,7 +365,7 @@ function bool UpdateAbilityIcons_Override(out NPSBDP_UIArmory_PromotionHeroColum
 			}
 
 			// The unit is not yet at the rank needed for this column
-			if (!class'NPSBDP_UIArmory_PromotionHero'.default.RevealAllAbilities && Column.Rank >= Unit.GetRank())
+			if (!`GETMCMVAR(SHOW_UNREACHED_PERKS) && Column.Rank >= Unit.GetRank())
 			{
 				AbilityName = class'UIUtilities_Text'.static.GetColoredText(m_strAbilityLockedTitle, eUIState_Disabled);
 				AbilityIcon = class'UIUtilities_Image'.const.UnknownAbilityIcon;
@@ -866,7 +868,7 @@ function PreviewAbility(int Rank, int Branch)
 		AbilityCost = class'UIUtilities_Text'.static.GetColoredText(AbilityCost, eUIState_Bad);
 	}
 		
-	if (!class'NPSBDP_UIArmory_PromotionHero'.default.RevealAllAbilities && Rank >= Unit.GetRank())
+	if (!`GETMCMVAR(SHOW_UNREACHED_PERKS) && Rank >= Unit.GetRank())
 	{
 		AbilityIcon = class'UIUtilities_Image'.const.LockedAbilityIcon;
 		AbilityName = class'UIUtilities_Text'.static.GetColoredText(m_strAbilityLockedTitle, eUIState_Disabled);
