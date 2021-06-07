@@ -12,6 +12,8 @@ Write-Host "Sourcing $common"
 
 $builder = [BuildProject]::new("X2WOTCCommunityPromotionScreen", $srcDirectory, $sdkPath, $gamePath)
 
+$builder.IncludeSrc("$srcDirectory\X2WOTCCommunityHighlander\X2WOTCCommunityHighlander\Src")
+
 switch ($config)
 {
     "debug" {
