@@ -474,7 +474,6 @@ simulated function RealizeScrollbar()
 		if(Scrollbar == none)
 		{			
 			Scrollbar = Spawn(class'UIScrollbar', self).InitScrollbar();
-			Scrollbar.SetAnchor(class'UIUtilities'.const.ANCHOR_TOP_RIGHT);
 			Scrollbar.SetHeight(450);						
 		}
 		Scrollbar.NotifyValueChange(OnScrollBarChange, 0.0, MaxPosition);
