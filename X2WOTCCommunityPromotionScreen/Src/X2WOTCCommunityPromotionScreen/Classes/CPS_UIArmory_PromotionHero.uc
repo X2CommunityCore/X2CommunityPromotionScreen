@@ -265,6 +265,52 @@ simulated function PopulateData()
 	HidePreview();
 }
 
+// Start Issue #36
+//
+// We override ChangeSelectedColumn() so that we can inject better behavior
+// for controller navigation between abilities.
+simulated function ChangeSelectedColumn(int oldIndex, int newIndex)
+{
+	local int i, NewColumnAbilityIndex, NewColumnAbilities, OldColumnAbilityIndex;
+	local UIArmory_PromotionHeroColumn OldColumn, NewColumn;
+
+	i = 0;
+	OldColumn = Columns[oldIndex];
+	NewColumn = Columns[newIndex];
+	NewColumnAbilities = NewColumn.AbilityIcons.Length;
+
+	if (`ISCONTROLLERACTIVE && (OldColumn != none) && (NewColumn != none))
+	{
+		OldColumnAbilityIndex = OldColumn.m_iPanelIndex;
+		// KDM : When selecting a new column, we want to preserve the
+		// currently selected row whenever possible; this can not occur
+		// when the old column's selected row is below the total number
+		// of rows in the new column.
+		NewColumnAbilityIndex = (OldColumnAbilityIndex < NewColumnAbilities) ? OldColumnAbilityIndex : (NewColumnAbilities - 1);
+
+		// KDM : We are only interested in rows with a visible ability
+		// icon; search for one in an upwards, looping, manner.
+		while ((!NewColumn.AbilityIcons[NewColumnAbilityIndex].bIsVisible) && (i < NewColumnAbilities))
+		{
+			NewColumnAbilityIndex--;
+			if (NewColumnAbilityIndex < 0)
+			{
+				NewColumnAbilityIndex = NewColumnAbilities - 1;
+			}
+
+			i++;
+		}
+
+		// KDM : When a column receives focus, it selects the ability
+		// icon at m_iPanelIndex; therefore, we need to set this value
+		// before calling super.ChangeSelectedColumn().
+		NewColumn.m_iPanelIndex = NewColumnAbilityIndex;
+	}
+
+	super(UIArmory_PromotionHero).ChangeSelectedColumn(oldIndex, newIndex);
+}
+// End Issue #36
+
 function string GetLocalizedAbilityTreeTitle(const int iRowIndex)
 {
 	local string strAbilityTreeTitle;
