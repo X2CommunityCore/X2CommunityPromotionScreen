@@ -587,6 +587,58 @@ simulated function bool AttemptScroll(bool Up)
 	return !bWrapped;
 }
 
+// This is a copy of `ComfirmAbilityCallback` so that we can inject some
+// hooks into to, because some mods will want to add behaviour around when
+// the player selects/purchases an ability.
+// (It also gives us the opportunity to fix a dumb typo in the function name)
+simulated function ConfirmAbilityCallbackEx(Name Action)
+{
+	local XComGameStateHistory History;
+	local bool bSuccess;
+	local XComGameState UpdateState;
+	local XComGameState_Unit UpdatedUnit;
+	local XComGameStateContext_ChangeContainer ChangeContainer;
+
+	if(Action == 'eUIAction_Accept')
+	{
+		History = `XCOMHISTORY;
+		ChangeContainer = class'XComGameStateContext_ChangeContainer'.static.CreateEmptyChangeContainer("Soldier Promotion");
+		UpdateState = History.CreateNewGameState(true, ChangeContainer);
+
+		UpdatedUnit = XComGameState_Unit(UpdateState.ModifyStateObject(class'XComGameState_Unit', GetUnit().ObjectID));
+		bSuccess = UpdatedUnit.BuySoldierProgressionAbility(UpdateState, PendingRank, PendingBranch);
+
+		if(bSuccess)
+		{
+			`GAMERULES.SubmitGameState(UpdateState);
+
+			Header.PopulateData();
+			PopulateData();
+
+			// Start Issue #37
+			// KDM : After an ability has been selected and accepted, all of the
+			// promotion data has to be re-populated and the selected ability's
+			// focus is lost. Therefore, we need to give the selected ability its
+			// focus back.
+			if (`ISCONTROLLERACTIVE)
+			{
+				Columns[m_iCurrentlySelectedColumn].OnReceiveFocus();
+			}
+			// End Issue #37
+		}
+		else
+			History.CleanupPendingGameState(UpdateState);
+
+		Movie.Pres.PlayUISound(eSUISound_SoldierPromotion);
+	}
+	else 	// if we got here it means we were going to upgrade an ability, but then we decided to cancel
+	{
+		Movie.Pres.PlayUISound(eSUISound_MenuClickNegative);
+		List.SetSelectedIndex(previousSelectedIndexOnFocusLost, true);
+		UIArmory_PromotionItem(List.GetSelectedItem()).SetSelectedAbility(SelectedAbilityIndex);
+	}
+}
+
 function InitColumns()
 {
 	local NPSBDP_UIArmory_PromotionHeroColumn Column;
@@ -994,7 +1046,7 @@ simulated function ConfirmAbilitySelection(int Rank, int Branch)
 	DialogData.strTitle = m_strConfirmAbilityTitle;
 	DialogData.strAccept = class'UIUtilities_Text'.default.m_strGenericYes;
 	DialogData.strCancel = class'UIUtilities_Text'.default.m_strGenericNO;
-	DialogData.fnCallback = ComfirmAbilityCallback;
+	DialogData.fnCallback = ConfirmAbilityCallbackEx;  // Issue #37
 
 	AbilityTree = GetUnit().GetRankAbilities(Rank);
 	AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
