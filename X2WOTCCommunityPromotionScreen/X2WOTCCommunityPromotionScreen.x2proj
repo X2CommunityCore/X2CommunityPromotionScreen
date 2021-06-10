@@ -152,6 +152,9 @@
     <Content Include="Src\X2WOTCCommunityPromotionScreen\Classes\CPS_UIArmory_PromotionHero.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\X2WOTCCommunityPromotionScreen\Classes\CPS_UIArmory_PromotionHeroColumn.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\X2WOTCCommunityPromotionScreen\Classes\UIScreen_Dummy.uc">
       <SubType>Content</SubType>
     </Content>
