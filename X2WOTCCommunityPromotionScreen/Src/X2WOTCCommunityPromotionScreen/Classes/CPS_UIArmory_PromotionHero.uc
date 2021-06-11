@@ -155,7 +155,7 @@ function CacheSoldierInfo()
 simulated function PopulateData()
 {
 	local XComGameState_Unit Unit;
-	local NPSBDP_UIArmory_PromotionHeroColumn Column;
+	local CPS_UIArmory_PromotionHeroColumn Column;
 	local string HeaderString, rankIcon, classIcon;
 	local int iRank, maxRank;
 	local bool bHighlightColumn;
@@ -248,7 +248,7 @@ simulated function PopulateData()
 	maxRank = Columns.Length; //class'X2ExperienceConfig'.static.GetMaxRank();
 	for (iRank = 0; iRank < maxRank; iRank++)
 	{
-		Column = NPSBDP_UIArmory_PromotionHeroColumn(Columns[iRank]);		
+		Column = CPS_UIArmory_PromotionHeroColumn(Columns[iRank]);		
 		Column.Offset = Position;
 
 		// Start Issue #18 - show "new rank" banner only if the player has an ability to choose and can afford it.
@@ -372,7 +372,7 @@ function HidePreview()
 	AS_SetDescriptionData("", ClassName, ClassDesc, "", "", "", "");
 }
 
-function bool UpdateAbilityIcons_Override(out NPSBDP_UIArmory_PromotionHeroColumn Column)
+function bool UpdateAbilityIcons_Override(out CPS_UIArmory_PromotionHeroColumn Column)
 {
 	local X2AbilityTemplateManager AbilityTemplateManager;
 	local X2AbilityTemplate AbilityTemplate, NextAbilityTemplate;
@@ -831,7 +831,7 @@ simulated function ConfirmAbilityCallbackEx(Name Action)
 
 function InitColumns()
 {
-	local NPSBDP_UIArmory_PromotionHeroColumn Column;
+	local CPS_UIArmory_PromotionHeroColumn Column;
 	local int i, numCols;
 
 	numCols = bHasBrigadierRank ? 8 : 7;
@@ -840,7 +840,7 @@ function InitColumns()
 
 	for (i = 0; i < numCols; i++)
 	{
-		Column = Spawn(class'NPSBDP_UIArmory_PromotionHeroColumn', self);
+		Column = Spawn(class'CPS_UIArmory_PromotionHeroColumn', self);
 		Column.MCName = name("rankColumn"$i);
 		Column.InitPromotionHeroColumn(i);
 		Columns.AddItem(Column);
