@@ -590,7 +590,6 @@ simulated function bool AttemptScroll(bool Up)
 // This is a copy of `ComfirmAbilityCallback` so that we can inject some
 // hooks into to, because some mods will want to add behaviour around when
 // the player selects/purchases an ability.
-// (It also gives us the opportunity to fix a dumb typo in the function name)
 simulated function ConfirmAbilityCallbackEx(Name Action)
 {
 	local XComGameStateHistory History;
@@ -627,7 +626,9 @@ simulated function ConfirmAbilityCallbackEx(Name Action)
 			// End Issue #37
 		}
 		else
+		{
 			History.CleanupPendingGameState(UpdateState);
+		}
 
 		Movie.Pres.PlayUISound(eSUISound_SoldierPromotion);
 	}
