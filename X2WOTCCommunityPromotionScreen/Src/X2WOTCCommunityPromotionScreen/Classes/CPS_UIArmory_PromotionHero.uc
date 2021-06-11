@@ -1019,84 +1019,111 @@ function int GetAbilityPointCost(int Rank, int Branch)
 	local XComGameState_Unit UnitState;
 	local array<SoldierClassAbilityType> AbilityTree;
 	local bool bPowerfulAbility;
-	local bool bColonelRankPlusAbility; // Whether this ability is at the Colonel rank or later.
+	local bool bColonelRankAbility;
 	local bool bNonClassAbility; // Rough equivalent of "XCOM row" abilities for regular soldier classes.
+	local bool bPromotionFreeUnlock; // Ability Point cost should not be applied if this ability is unlocked by a regular soldier for free on their promotion.
 	local int iAbilityCost;
 	local XComLWTuple Tuple; // Tuple for Issue #10
 
 	UnitState = GetUnit();
 	AbilityTree = UnitState.GetRankAbilities(Rank);	
 	bPowerfulAbility = class'X2StrategyGameRulesetDataStructures'.default.PowerfulAbilities.Find(AbilityTree[Branch].AbilityName) != INDEX_NONE;
-	bColonelRankPlusAbility = Rank >= 6; // Matches base game behavior
+	bColonelRankAbility = Rank == 6;
 	bNonClassAbility = Branch >= AbilitiesPerRank; // This will be "false" for 4th row of abilities for base WOTC Faction Heroes, since they have a randomized deck of perks, not a "true" XCOM row.
+
+	if (!bAsResistanceHero && !bNonClassAbility && !UnitState.HasPurchasedPerkAtRank(Rank, AbilitiesPerRank))
+	{
+		// If this is a base game soldier with a promotion available, ability costs nothing.
+		// We still calculate the proper ability cost below in case a mod wants to
+		// use 'OverrideAbilityPointCost' event to make this ability cost its proper AP.
+		bPromotionFreeUnlock = true;
+	}
 
 	if (GetCustomAbilityCost(UnitState, AbilityTree[Branch].AbilityName, iAbilityCost))
 	{
 		// Do nothing, iAbilityCost will already hold the config value.
 	}
-	else if (!bAsResistanceHero && !bNonClassAbility && !UnitState.HasPurchasedPerkAtRank(Rank, AbilitiesPerRank))
+	else 
 	{
-		// If this is a base game soldier with a promotion available, ability costs nothing.
-		iAbilityCost = 0;
+		if (bPowerfulAbility && (bAsResistanceHero || bNonClassAbility))
+		{
+			// Ability Cost is increased for "powerful" abilities in XCOM row of regular soldiers, 
+			// or anywhere in the Faction Heroes' ability tree.	
+			iAbilityCost = class'X2StrategyGameRulesetDataStructures'.default.PowerfulAbilityPointCost;
+		}
+		else if (bAsResistanceHero && bColonelRankAbility && !bHasBrigadierRank)
+		{
+			// Colonel+ rank abilities of Faction Heroes have increased cost as well, 
+			// unless the class has a Brigadier Rank, 
+			// in which case we default to configuration array of ability costs below.
+			iAbilityCost = class'X2StrategyGameRulesetDataStructures'.default.PowerfulAbilityPointCost;
+		}
+		else
+		{
+			iAbilityCost = GetDefaultAbilityPointCostForRank(Rank);
+		}	
 	}
-	else if (bNonClassAbility && bPowerfulAbility)
-	{
-		// Ability Cost is increased for "powerful" abilities in XCOM row of regular soldiers, 		
-		iAbilityCost = class'X2StrategyGameRulesetDataStructures'.default.PowerfulAbilityPointCost;
-	}
-	else if (bAsResistanceHero && bPowerfulAbility)
-	{
-		// or anywhere in the Faction Heroes' ability tree.	
-		iAbilityCost = class'X2StrategyGameRulesetDataStructures'.default.PowerfulAbilityPointCost;
-	}
-	else if (bAsResistanceHero && bColonelRankPlusAbility && !bHasBrigadierRank)
-	{
-		// Colonel+ rank abilities of Faction Heroes have increased cost as well, 
-		// unless the class has a Brigadier Rank, in which case we default to 
-		// configuration array of ability costs.
-		iAbilityCost = class'X2StrategyGameRulesetDataStructures'.default.PowerfulAbilityPointCost;
-	}
-	else
-	{
-		iAbilityCost = GetDefaultAbilityPointCostForRank(Rank);
-	}	
 
 	// Start Issue #10
-	/// Mods can listen to 'OverrideAbilityPointCost' event to use their own logic 
+	/// Mods can listen to 'CPS_OverrideAbilityPointCost' event to use their own logic 
 	/// to determine abiility point cost for this particular unit and this particular ability.
-	/// It can be used to reduce ability point cost to 0, if necessary.
-	/// Rank and Row begin their count at 0, in the upper left corner of the promotion screen.
+	/// 
+	/// Community Promotion Screen always calculates proper Ability Point Cost for each ability,
+	/// which is passed in the Tuple as `iAbilityCost`. However, abilities unlocked 
+	/// by regular soldiers when they are first promoted to a new rank 
+	/// normally do not cost any Ability Points, which is relayed in the Tuple as `bPromotionFreeUnlock`.
+	///
+	/// If `bPromotionFreeUnlock` is `true`, the Ability Point Cost written in `iAbilityCost`
+	/// will be ignored and the ability will be free to unlock.
+	/// If `bPromotionFreeUnlock` is `false`, then the Ability Point Cost written in `iAbilityCost`
+	/// will be applied.
+	///
+	/// This is done so that mods can easily make soldier class abilities cost their normal
+	/// amount of Ability Points by setting `bPromotionFreeUnlock` to `false`, 
+	/// even when they would have been free by vanilla logic.
+	///
+	/// Rank and Row begin their count at 0, with the first perk in the upper left corner of the promotion screen.
 	///
 	/// ```event
-	/// EventID: OverrideAbilityPointCost,
+	/// EventID: CPS_OverrideAbilityPointCost,
 	/// EventData: [inout int iAbilityCost,
+	///				inout bPromotionFreeUnlock,
 	///				in name AbilityTemplateName, 
 	///				in int Rank, 
 	///				in int Row, 
 	///				in int AbilitiesPerRank, 
-	///				in bool bAsResistanceHero],
+	///				in bool bAsResistanceHero,
+	///				in bool bCanSpendAP],
 	/// EventSource: XComGameState_Unit (UnitState),
 	/// NewGameState: none
 	/// ```
 	Tuple = new class'XComLWTuple';
-	Tuple.Id = 'OverrideAbilityPointCost';
-	Tuple.Data.Add(6);
+	Tuple.Id = 'CPS_OverrideAbilityPointCost';
+	Tuple.Data.Add(8);
 	Tuple.Data[0].kind = XComLWTVInt;
 	Tuple.Data[0].i = iAbilityCost;
-	Tuple.Data[1].kind = XComLWTVName;
-	Tuple.Data[1].n = AbilityTree[Branch].AbilityName;
-	Tuple.Data[2].kind = XComLWTVInt;
-	Tuple.Data[2].i = Rank;
+	Tuple.Data[1].kind = XComLWTVBool;
+	Tuple.Data[1].b = bPromotionFreeUnlock;	
+	Tuple.Data[2].kind = XComLWTVName;
+	Tuple.Data[2].n = AbilityTree[Branch].AbilityName;
 	Tuple.Data[3].kind = XComLWTVInt;
-	Tuple.Data[3].i = Branch;
+	Tuple.Data[3].i = Rank;
 	Tuple.Data[4].kind = XComLWTVInt;
-	Tuple.Data[4].i = AbilitiesPerRank;
-	Tuple.Data[5].kind = XComLWTVBool;
-	Tuple.Data[5].b = bAsResistanceHero;	
+	Tuple.Data[4].i = Branch;
+	Tuple.Data[5].kind = XComLWTVInt;
+	Tuple.Data[5].i = AbilitiesPerRank;
+	Tuple.Data[6].kind = XComLWTVBool;
+	Tuple.Data[6].b = bAsResistanceHero;	
+	Tuple.Data[7].kind = XComLWTVBool;
+	Tuple.Data[7].b = CanSpendAP();	
 
 	`XEVENTMGR.TriggerEvent(Tuple.Id, Tuple, UnitState);
-	
-	return Tuple.Data[0].i;
+
+	if (Tuple.Data[1].b) // bPromotionFreeUnlock
+	{
+		return 0;
+	}
+	return Tuple.Data[0].i; // iAbilityCost
 	// End Issue #10
 }
 
