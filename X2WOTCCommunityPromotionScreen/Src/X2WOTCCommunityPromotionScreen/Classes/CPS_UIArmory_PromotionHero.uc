@@ -798,6 +798,9 @@ simulated function ConfirmAbilityCallbackEx(Name Action)
 
 		if(bSuccess)
 		{
+			// Issue #43
+			TriggerAbilityPurchased(UpdatedUnit, PendingRank, PendingBranch, UpdateState);
+
 			`GAMERULES.SubmitGameState(UpdateState);
 
 			Header.PopulateData();
@@ -828,6 +831,45 @@ simulated function ConfirmAbilityCallbackEx(Name Action)
 		UIArmory_PromotionItem(List.GetSelectedItem()).SetSelectedAbility(SelectedAbilityIndex);
 	}
 }
+
+// Issue #43
+/// Fires an event when the player has selected/purchased an ability for
+/// a given soldier. The soldier unit state is passed as the event source.
+/// The unit state can be retrieved and modified using the provided NewGameState
+/// if `ELD_Immediate` is used for the listener.
+///
+/// Note that listeners can not cancel the ability purchase.
+///
+/// ```event
+/// EventID: CPS_AbilityPurchased,
+/// EventData: [in int Rank, in int Row,
+///				in int AbilitiesPerRank,
+///				in bool bAsResistanceHero,
+///				in bool bCanSpendAP],
+/// EventSource: XComGameState_Unit (UnitState),
+/// NewGameState: yes
+/// ```
+private function TriggerAbilityPurchased(XComGameState_Unit UnitState, int Rank, int Branch, XComGameState NewGameState)
+{
+	local XComLWTuple Tuple;
+
+	Tuple = new class'XComLWTuple';
+	Tuple.Id = 'CPS_AbilityPurchased';
+	Tuple.Data.Add(5);
+	Tuple.Data[0].kind = XComLWTVInt;
+	Tuple.Data[0].i = Rank;
+	Tuple.Data[1].kind = XComLWTVInt;
+	Tuple.Data[1].i = Branch;
+	Tuple.Data[2].kind = XComLWTVInt;
+	Tuple.Data[2].i = AbilitiesPerRank;
+	Tuple.Data[3].kind = XComLWTVBool;
+	Tuple.Data[3].b = bAsResistanceHero;
+	Tuple.Data[4].kind = XComLWTVBool;
+	Tuple.Data[4].b = CanSpendAP();
+
+	`XEVENTMGR.TriggerEvent(Tuple.Id, Tuple, UnitState, NewGameState);
+}
+// End Issue #43
 
 function InitColumns()
 {
