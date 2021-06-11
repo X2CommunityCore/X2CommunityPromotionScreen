@@ -462,6 +462,149 @@ simulated function bool AllAbilityIconsHidden(UIArmory_PromotionHeroColumn Colum
 	return true;
 }
 
+// Start Issue #38
+// KDM : UIArmory_Promotion.UpdateNavHelp() has to be overridden, in order to
+// change individual help item's placement, since there is no way to remove
+// individual components of the navigation help system.
+simulated function UpdateNavHelp()
+{
+	local int i;
+	local string PrevKey, NextKey;
+	local XComGameState_HeadquartersXCom XComHQ;
+	local XComGameState_Unit Unit;
+	local XGParamTag LocTag;
+
+	Unit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(UnitReference.ObjectID));
+
+	if (!bIsFocused)
+	{
+		return;
+	}
+
+	NavHelp = `HQPRES.m_kAvengerHUD.NavHelp;
+
+	NavHelp.ClearButtonHelp();
+
+	if (UIAfterAction(Movie.Stack.GetScreen(class'UIAfterAction')) != none)
+	{
+		NavHelp.AddBackButton(OnCancel);
+
+		if (UIArmory_PromotionItem(List.GetSelectedItem()).bEligibleForPromotion && `ISCONTROLLERACTIVE)
+		{
+			NavHelp.AddSelectNavHelp();
+		}
+
+		if (!`ISCONTROLLERACTIVE)
+		{
+			if (!XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(UnitReference.ObjectID)).ShowPromoteIcon())
+			{
+				NavHelp.AddContinueButton(OnCancel);
+			}
+		}
+
+		if (class'XComGameState_HeadquartersXCom'.static.IsObjectiveCompleted('T0_M7_WelcomeToGeoscape'))
+		{
+			NavHelp.AddLeftHelp(m_strMakePosterTitle, class'UIUtilities_Input'.static.GetGamepadIconPrefix() $class'UIUtilities_Input'.const.ICON_X_SQUARE, MakePosterButton);
+		}
+
+		if (`ISCONTROLLERACTIVE)
+		{
+			if (!UIArmory_PromotionItem(List.GetSelectedItem()).bIsDisabled)
+			{
+				NavHelp.AddCenterHelp(m_strInfo, class'UIUtilities_Input'.static.GetGamepadIconPrefix() $class'UIUtilities_Input'.const.ICON_LSCLICK_L3);
+			}
+
+			if (IsAllowedToCycleSoldiers() && class'UIUtilities_Strategy'.static.HasSoldiersToCycleThrough(UnitReference, CanCycleTo))
+			{
+				NavHelp.AddCenterHelp(m_strTabNavHelp, class'UIUtilities_Input'.static.GetGamepadIconPrefix() $ class'UIUtilities_Input'.const.ICON_LBRB_L1R1); // bsg-jrebar (5/23/17): Removing inlined buttons
+			}
+
+			NavHelp.AddCenterHelp(m_strRotateNavHelp, class'UIUtilities_Input'.static.GetGamepadIconPrefix() $ class'UIUtilities_Input'.const.ICON_RSTICK); // bsg-jrebar (5/23/17): Removing inlined buttons
+		}
+	}
+	else
+	{
+		NavHelp.AddBackButton(OnCancel);
+
+		if (UIArmory_PromotionItem(List.GetSelectedItem()).bEligibleForPromotion)
+		{
+			NavHelp.AddSelectNavHelp();
+		}
+
+		if (XComHQPresentationLayer(Movie.Pres) != none)
+		{
+			LocTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
+			LocTag.StrValue0 = Movie.Pres.m_kKeybindingData.GetKeyStringForAction(PC.PlayerInput, eTBC_PrevUnit);
+			PrevKey = `XEXPAND.ExpandString(PrevSoldierKey);
+			LocTag.StrValue0 = Movie.Pres.m_kKeybindingData.GetKeyStringForAction(PC.PlayerInput, eTBC_NextUnit);
+			NextKey = `XEXPAND.ExpandString(NextSoldierKey);
+
+			if (class'XComGameState_HeadquartersXCom'.static.GetObjectiveStatus('T0_M7_WelcomeToGeoscape') != eObjectiveState_InProgress &&
+				RemoveMenuEvent == '' && NavigationBackEvent == '' && !`ScreenStack.IsInStack(class'UISquadSelect'))
+			{
+				NavHelp.AddGeoscapeButton();
+			}
+
+			if (Movie.IsMouseActive() && IsAllowedToCycleSoldiers() && class'UIUtilities_Strategy'.static.HasSoldiersToCycleThrough(UnitReference, CanCycleTo))
+			{
+				NavHelp.SetButtonType("XComButtonIconPC");
+				i = eButtonIconPC_Prev_Soldier;
+				NavHelp.AddCenterHelp( string(i), "", PrevSoldier, false, PrevKey);
+				i = eButtonIconPC_Next_Soldier; 
+				NavHelp.AddCenterHelp( string(i), "", NextSoldier, false, NextKey);
+				NavHelp.SetButtonType("");
+			}
+		}
+
+		if (class'XComGameState_HeadquartersXCom'.static.IsObjectiveCompleted('T0_M7_WelcomeToGeoscape'))
+		{
+			if (`ISCONTROLLERACTIVE)
+			{
+				NavHelp.AddLeftHelp(m_strMakePosterTitle, class'UIUtilities_Input'.static.GetGamepadIconPrefix() $class'UIUtilities_Input'.const.ICON_X_SQUARE, MakePosterButton);
+			}
+			else
+			{
+				NavHelp.AddLeftHelp(m_strMakePosterTitle, , MakePosterButton);
+			}
+		}
+
+		if (`ISCONTROLLERACTIVE)
+		{
+			if (!UIArmory_PromotionItem(List.GetSelectedItem()).bIsDisabled)
+			{
+				// KDM : Add the 'show abilities' tip to the left help panel so it
+				// doesn't overlap with the cycle soldiers tip.
+				NavHelp.AddLeftHelp(m_strInfo, class'UIUtilities_Input'.static.GetGamepadIconPrefix() $ class'UIUtilities_Input'.const.ICON_LSCLICK_L3);
+			}
+
+			if (IsAllowedToCycleSoldiers() && class'UIUtilities_Strategy'.static.HasSoldiersToCycleThrough(UnitReference, CanCycleTo))
+			{
+				NavHelp.AddCenterHelp(m_strTabNavHelp, class'UIUtilities_Input'.static.GetGamepadIconPrefix() $ class'UIUtilities_Input'.const.ICON_LBRB_L1R1); // bsg-jrebar (5/23/17): Removing inlined buttons
+			}
+
+			NavHelp.AddCenterHelp(m_strRotateNavHelp, class'UIUtilities_Input'.static.GetGamepadIconPrefix() $ class'UIUtilities_Input'.const.ICON_RSTICK); // bsg-jrebar (5/23/17): Removing inlined buttons
+		}
+
+		XComHQ = class'UIUtilities_Strategy'.static.GetXComHQ();
+
+		if (XComHQ.HasFacilityByName('RecoveryCenter') && IsAllowedToCycleSoldiers() && !`ScreenStack.IsInStack(class'UIFacility_TrainingCenter')
+			&& !`ScreenStack.IsInStack(class'UISquadSelect') && !`ScreenStack.IsInStack(class'UIAfterAction') && Unit.GetSoldierClassTemplate().bAllowAWCAbilities)
+		{
+			if (`ISCONTROLLERACTIVE)
+			{
+				NavHelp.AddRightHelp(m_strHotlinkToRecovery, class'UIUtilities_Input'.consT.ICON_BACK_SELECT);
+			}
+			else
+			{
+				NavHelp.AddRightHelp(m_strHotlinkToRecovery, , JumpToRecoveryFacility);
+			}
+		}
+
+		NavHelp.Show();
+	}
+}
+// End Issue #38
+
 simulated function RealizeScrollbar()
 {
 	// We only need a scrollbar when we can actually scroll
