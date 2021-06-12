@@ -113,7 +113,7 @@ static function EventListenerReturn FixSparkAbilityTitles(
 {
 	local XComGameState_Unit UnitState;
 	local XComLWTuple Tuple;
-	local int Row, i;
+	local int Row;
 
 	Tuple = XComLWTuple(EventData);
 	if (Tuple == none)
