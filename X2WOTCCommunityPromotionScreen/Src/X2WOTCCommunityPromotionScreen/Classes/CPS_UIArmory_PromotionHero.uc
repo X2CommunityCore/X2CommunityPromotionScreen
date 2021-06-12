@@ -100,11 +100,11 @@ simulated function InitPromotion(StateObjectReference UnitRef, optional bool bIn
 	{
 		if (bHasBrigadierRank)
 		{
-			Scrollbar.SetPosition(-465, 310);
+			Scrollbar.SetPosition(1350, 310);
 		}
 		else
 		{
-			Scrollbar.SetPosition(-550, 310);
+			Scrollbar.SetPosition(1275, 310);
 		}
 		
 		Scrollbar.MC.SetNum("_alpha", 0);
@@ -659,7 +659,6 @@ simulated function RealizeScrollbar()
 		if(Scrollbar == none)
 		{			
 			Scrollbar = Spawn(class'UIScrollbar', self).InitScrollbar();
-			Scrollbar.SetAnchor(class'UIUtilities'.const.ANCHOR_TOP_RIGHT);
 			Scrollbar.SetHeight(450);						
 		}
 		Scrollbar.NotifyValueChange(OnScrollBarChange, 0.0, MaxPosition);
