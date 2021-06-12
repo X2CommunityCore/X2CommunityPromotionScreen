@@ -141,8 +141,8 @@ function CacheSoldierInfo()
 
 	bHasBrigadierRank = Unit.AbilityTree.Length > 7;
 	GetAbilitiesPerRank();
-	bAsResistanceHero = Unit.IsResistanceHero() || AbilitiesPerRank == 0;
 	ClassTemplate = Unit.GetSoldierClassTemplate();
+	bAsResistanceHero = IsUnitResistanceHero(Unit);
 }
 
 simulated function PopulateData()
@@ -1395,6 +1395,37 @@ function bool GetCustomAbilitiesPerRank()
 		return true;
 	}
 	return false;
+}
+
+function bool IsUnitResistanceHero(XComGameState_Unit UnitState)
+{
+	local XComLWTuple Tuple;
+
+	/// Mods can listen to the 'CPS_OverrideIsUnitResistanceHero' event to modify whether the
+	/// Community Promotion Screen should treat this unit as a Faction Hero or not.
+	/// 
+	/// Faction heroes use different ability unlock and ability point cost rules, 
+	/// for example they can unlock multiple perks per rank without a Training Center, 
+	/// but they have to pay ability points for every unlocked ability.
+	///
+	///```event
+	/// EventID: CPS_OverrideIsUnitResistanceHero,
+	/// EventData: [inout bool bAsResistanceHero,
+	///				in int AbilitiesPerRank],
+	/// EventSource: XComGameState_Unit (UnitState),
+	/// NewGameState: none
+	///```	
+	Tuple = new class'XComLWTuple';
+	Tuple.Id = 'CPS_OverrideIsUnitResistanceHero';
+	Tuple.Data.Add(2);
+	Tuple.Data[0].kind = XComLWTVBool;
+	Tuple.Data[0].b = UnitState.IsResistanceHero() || AbilitiesPerRank == 0; // bAsResistanceHero
+	Tuple.Data[1].kind = XComLWTVInt;
+	Tuple.Data[1].i = AbilitiesPerRank;
+
+	`XEVENTMGR.TriggerEvent(Tuple.Id, Tuple, UnitState);
+
+	return Tuple.Data[0].b;
 }
 
 function ResizeScreenForBrigadierRank()
