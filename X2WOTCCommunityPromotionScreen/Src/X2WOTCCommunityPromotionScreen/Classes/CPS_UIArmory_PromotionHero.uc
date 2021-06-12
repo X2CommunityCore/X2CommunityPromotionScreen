@@ -770,101 +770,6 @@ simulated function bool AttemptScroll(bool Up)
 	return !bWrapped;
 }
 
-// This is a copy of `ComfirmAbilityCallback` so that we can inject some
-// hooks into to, because some mods will want to add behaviour around when
-// the player selects/purchases an ability.
-simulated function ConfirmAbilityCallbackEx(Name Action)
-{
-	local XComGameStateHistory History;
-	local bool bSuccess;
-	local XComGameState UpdateState;
-	local XComGameState_Unit UpdatedUnit;
-	local XComGameStateContext_ChangeContainer ChangeContainer;
-
-	if(Action == 'eUIAction_Accept')
-	{
-		History = `XCOMHISTORY;
-		ChangeContainer = class'XComGameStateContext_ChangeContainer'.static.CreateEmptyChangeContainer("Soldier Promotion");
-		UpdateState = History.CreateNewGameState(true, ChangeContainer);
-
-		UpdatedUnit = XComGameState_Unit(UpdateState.ModifyStateObject(class'XComGameState_Unit', GetUnit().ObjectID));
-		bSuccess = UpdatedUnit.BuySoldierProgressionAbility(UpdateState, PendingRank, PendingBranch);
-
-		if(bSuccess)
-		{
-			// Issue #43
-			TriggerAbilityPurchased(UpdatedUnit, PendingRank, PendingBranch, UpdateState);
-
-			`GAMERULES.SubmitGameState(UpdateState);
-
-			Header.PopulateData();
-			PopulateData();
-
-			// Start Issue #37
-			// KDM : After an ability has been selected and accepted, all of the
-			// promotion data has to be re-populated and the selected ability's
-			// focus is lost. Therefore, we need to give the selected ability its
-			// focus back.
-			if (`ISCONTROLLERACTIVE)
-			{
-				Columns[m_iCurrentlySelectedColumn].OnReceiveFocus();
-			}
-			// End Issue #37
-		}
-		else
-		{
-			History.CleanupPendingGameState(UpdateState);
-		}
-
-		Movie.Pres.PlayUISound(eSUISound_SoldierPromotion);
-	}
-	else 	// if we got here it means we were going to upgrade an ability, but then we decided to cancel
-	{
-		Movie.Pres.PlayUISound(eSUISound_MenuClickNegative);
-		List.SetSelectedIndex(previousSelectedIndexOnFocusLost, true);
-		UIArmory_PromotionItem(List.GetSelectedItem()).SetSelectedAbility(SelectedAbilityIndex);
-	}
-}
-
-// Issue #43
-/// Fires an event when the player has selected/purchased an ability for
-/// a given soldier. The soldier unit state is passed as the event source.
-/// The unit state can be retrieved and modified using the provided NewGameState
-/// if `ELD_Immediate` is used for the listener.
-///
-/// Note that listeners can not cancel the ability purchase.
-///
-/// ```event
-/// EventID: CPS_AbilityPurchased,
-/// EventData: [in int Rank, in int Row,
-///				in int AbilitiesPerRank,
-///				in bool bAsResistanceHero,
-///				in bool bCanSpendAP],
-/// EventSource: XComGameState_Unit (UnitState),
-/// NewGameState: yes
-/// ```
-private function TriggerAbilityPurchased(XComGameState_Unit UnitState, int Rank, int Branch, XComGameState NewGameState)
-{
-	local XComLWTuple Tuple;
-
-	Tuple = new class'XComLWTuple';
-	Tuple.Id = 'CPS_AbilityPurchased';
-	Tuple.Data.Add(5);
-	Tuple.Data[0].kind = XComLWTVInt;
-	Tuple.Data[0].i = Rank;
-	Tuple.Data[1].kind = XComLWTVInt;
-	Tuple.Data[1].i = Branch;
-	Tuple.Data[2].kind = XComLWTVInt;
-	Tuple.Data[2].i = AbilitiesPerRank;
-	Tuple.Data[3].kind = XComLWTVBool;
-	Tuple.Data[3].b = bAsResistanceHero;
-	Tuple.Data[4].kind = XComLWTVBool;
-	Tuple.Data[4].b = bCanSpendAP;
-
-	`XEVENTMGR.TriggerEvent(Tuple.Id, Tuple, UnitState, NewGameState);
-}
-// End Issue #43
-
 function InitColumns()
 {
 	local CPS_UIArmory_PromotionHeroColumn Column;
@@ -1331,6 +1236,107 @@ simulated function ConfirmAbilitySelection(int Rank, int Branch)
 	DialogData.strText = ConfirmAbilityText;
 	Movie.Pres.UIRaiseDialog(DialogData);
 }
+
+// This is a copy of `ComfirmAbilityCallback` so that we can inject some
+// hooks into to, because some mods will want to add behaviour around when
+// the player selects/purchases an ability.
+simulated function ConfirmAbilityCallbackEx(Name Action)
+{
+	local XComGameStateHistory History;
+	local bool bSuccess;
+	local XComGameState UpdateState;
+	local XComGameState_Unit UpdatedUnit;
+	local XComGameStateContext_ChangeContainer ChangeContainer;
+	local int iAbilityPointCost;
+
+	if(Action == 'eUIAction_Accept')
+	{
+		History = `XCOMHISTORY;
+		ChangeContainer = class'XComGameStateContext_ChangeContainer'.static.CreateEmptyChangeContainer("Soldier Promotion");
+		UpdateState = History.CreateNewGameState(true, ChangeContainer);
+
+		UpdatedUnit = XComGameState_Unit(UpdateState.ModifyStateObject(class'XComGameState_Unit', GetUnit().ObjectID));
+		iAbilityPointCost = GetAbilityPointCost(PendingRank, PendingBranch);
+		bSuccess = UpdatedUnit.BuySoldierProgressionAbility(UpdateState, PendingRank, PendingBranch, iAbilityPointCost);
+
+		if(bSuccess)
+		{
+			// Issue #43
+			TriggerAbilityPurchased(UpdatedUnit, PendingRank, PendingBranch, iAbilityPointCost, UpdateState);
+
+			`GAMERULES.SubmitGameState(UpdateState);
+
+			Header.PopulateData();
+			PopulateData();
+
+			// Start Issue #37
+			// KDM : After an ability has been selected and accepted, all of the
+			// promotion data has to be re-populated and the selected ability's
+			// focus is lost. Therefore, we need to give the selected ability its
+			// focus back.
+			if (`ISCONTROLLERACTIVE)
+			{
+				Columns[m_iCurrentlySelectedColumn].OnReceiveFocus();
+			}
+			// End Issue #37
+		}
+		else
+		{
+			History.CleanupPendingGameState(UpdateState);
+		}
+
+		Movie.Pres.PlayUISound(eSUISound_SoldierPromotion);
+	}
+	else 	// if we got here it means we were going to upgrade an ability, but then we decided to cancel
+	{
+		Movie.Pres.PlayUISound(eSUISound_MenuClickNegative);
+		List.SetSelectedIndex(previousSelectedIndexOnFocusLost, true);
+		UIArmory_PromotionItem(List.GetSelectedItem()).SetSelectedAbility(SelectedAbilityIndex);
+	}
+}
+
+// Issue #43
+/// Fires an event when the player has selected/purchased an ability for
+/// a given soldier. The soldier unit state is passed as the event source.
+/// The unit state can be retrieved and modified using the provided NewGameState
+/// if `ELD_Immediate` is used for the listener.
+///
+/// Note that this listener can not cancel the ability purchase.
+///
+/// ```event
+/// EventID: CPS_AbilityPurchased,
+/// EventData: [in int Rank, 
+///				in int Row,
+///				in int AbilitiesPerRank,
+///				in bool bAsResistanceHero,
+///				in bool bCanSpendAP,
+///				in int iAbilityPointCost],
+/// EventSource: XComGameState_Unit (UnitState),
+/// NewGameState: yes
+/// ```
+private function TriggerAbilityPurchased(XComGameState_Unit UnitState, int Rank, int Branch, int iAbilityPointCost, XComGameState NewGameState)
+{
+	local XComLWTuple Tuple;
+
+	Tuple = new class'XComLWTuple';
+	Tuple.Id = 'CPS_AbilityPurchased';
+	Tuple.Data.Add(6);
+	Tuple.Data[0].kind = XComLWTVInt;
+	Tuple.Data[0].i = Rank;
+	Tuple.Data[1].kind = XComLWTVInt;
+	Tuple.Data[1].i = Branch;
+	Tuple.Data[2].kind = XComLWTVInt;
+	Tuple.Data[2].i = AbilitiesPerRank;
+	Tuple.Data[3].kind = XComLWTVBool;
+	Tuple.Data[3].b = bAsResistanceHero;
+	Tuple.Data[4].kind = XComLWTVBool;
+	Tuple.Data[4].b = bCanSpendAP;
+	Tuple.Data[5].kind = XComLWTVInt;
+	Tuple.Data[5].i = iAbilityPointCost;
+
+	`XEVENTMGR.TriggerEvent(Tuple.Id, Tuple, UnitState, NewGameState);
+}
+// End Issue #43
 
 //New functions
 simulated function string GetPromotionBlueprintTag(StateObjectReference UnitRef)
