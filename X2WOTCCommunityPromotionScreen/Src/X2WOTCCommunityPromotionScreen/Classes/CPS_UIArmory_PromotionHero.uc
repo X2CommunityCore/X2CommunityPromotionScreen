@@ -98,14 +98,7 @@ simulated function InitPromotion(StateObjectReference UnitRef, optional bool bIn
 	//Only set position and animate in the scrollbar once after data population. Prevents scrollbar flicker on scrolling.
 	if (Scrollbar != none)
 	{
-		if (bHasBrigadierRank)
-		{
-			Scrollbar.SetPosition(1350, 310);
-		}
-		else
-		{
-			Scrollbar.SetPosition(1275, 310);
-		}
+		Scrollbar.SetPosition(1350, 310); // Strangely, this works for both brigadiers and regular soldiers.
 		
 		Scrollbar.MC.SetNum("_alpha", 0);
 		Scrollbar.AddTweenBetween("_alpha", 0, 100, 0.2f, 0.3f);
