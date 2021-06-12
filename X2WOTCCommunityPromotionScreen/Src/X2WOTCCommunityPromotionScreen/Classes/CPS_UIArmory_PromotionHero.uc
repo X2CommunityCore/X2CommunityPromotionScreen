@@ -33,6 +33,7 @@ var bool					bHasBrigadierRank;
 var bool					bAsResistanceHero;	// Whether this unit uses the Faction Hero promotion scheme, where they have to pay AP for each ability.
 var int						AbilitiesPerRank;	// Number of ability rows in soldier class template, not counting the "XCOM" row for regular soldiers. 
 var X2SoldierClassTemplate	ClassTemplate;
+var bool					bCanSpendAP;
 // End Issue #24
 
 `include(X2WOTCCommunityPromotionScreen\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
@@ -139,9 +140,10 @@ function CacheSoldierInfo()
 
 	Unit = GetUnit();
 
+	ClassTemplate = Unit.GetSoldierClassTemplate();	
 	bHasBrigadierRank = Unit.AbilityTree.Length > 7;
 	GetAbilitiesPerRank();
-	ClassTemplate = Unit.GetSoldierClassTemplate();
+	bCanSpendAP = CanSpendAP();
 	bAsResistanceHero = IsUnitResistanceHero(Unit);
 }
 
@@ -857,7 +859,7 @@ private function TriggerAbilityPurchased(XComGameState_Unit UnitState, int Rank,
 	Tuple.Data[3].kind = XComLWTVBool;
 	Tuple.Data[3].b = bAsResistanceHero;
 	Tuple.Data[4].kind = XComLWTVBool;
-	Tuple.Data[4].b = CanSpendAP();
+	Tuple.Data[4].b = bCanSpendAP;
 
 	`XEVENTMGR.TriggerEvent(Tuple.Id, Tuple, UnitState, NewGameState);
 }
@@ -1115,7 +1117,7 @@ function int GetAbilityPointCost(int Rank, int Branch)
 	Tuple.Data[6].kind = XComLWTVBool;
 	Tuple.Data[6].b = bAsResistanceHero;	
 	Tuple.Data[7].kind = XComLWTVBool;
-	Tuple.Data[7].b = CanSpendAP();	
+	Tuple.Data[7].b = bCanSpendAP;	
 
 	`XEVENTMGR.TriggerEvent(Tuple.Id, Tuple, UnitState);
 
