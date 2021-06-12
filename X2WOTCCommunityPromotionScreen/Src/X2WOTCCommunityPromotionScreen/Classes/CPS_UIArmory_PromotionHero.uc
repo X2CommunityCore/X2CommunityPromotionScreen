@@ -1079,7 +1079,7 @@ function int GetAbilityPointCost(int Rank, int Branch)
 	Tuple.Id = 'CPS_OverrideGetAbilityPointCostProperties';
 	Tuple.Data.Add(9);
 	Tuple.Data[0].kind = XComLWTVName;
-	Tuple.Data[0].n = AbilityName;
+	Tuple.Data[0].n = AbilityTree[Branch].AbilityName;
 	Tuple.Data[1].kind = XComLWTVBool;
 	Tuple.Data[1].b = Branch < AbilitiesPerRank; // bClassAbility
 	Tuple.Data[2].kind = XComLWTVBool;
