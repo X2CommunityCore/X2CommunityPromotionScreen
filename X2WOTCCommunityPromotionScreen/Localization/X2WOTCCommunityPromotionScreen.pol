@@ -1,8 +1,8 @@
-[Spark X2SoldierClassTemplate]
-AbilityTreeTitles[0]="Walka przyszłości"
-AbilityTreeTitles[1]="Machina bojowa"
-AbilityTreeTitles[2]="XCOM"
-
 [UISL_CPS]
 strDisablePopup = "Wyłącz tę wiadomość"
 strPopupText = "\nCześć, tu twój mod <font color='#00ff00'>[WOTC] Community Promotion Screen</font>.\n\nWidzę że używasz przestarzałą wersję: <font color='#ff0000'>[WOTC] New Promotion Screen by Default</font>.\n\nOna działa, ale jej nie potrzebujesz. Robię wszystko co <font color='#ff0000'>[WOTC] New Promotion Screen by Default</font> robi I więcej, i działam z wszystkimi wymaganymi modami.\n\nZalecam aby zdezaktywować lub usunąć <font color='#ff0000'>[WOTC] New Promotion Screen by Default</font>, gdyż przejmę jej funkcje."
+
+[X2EventListener_PromotionScreenOverrides]
+SparkAbilityTreeTitles[0]="Walka przyszłości"
+SparkAbilityTreeTitles[1]="Machina bojowa"
+SparkAbilityTreeTitles[2]="XCOM"

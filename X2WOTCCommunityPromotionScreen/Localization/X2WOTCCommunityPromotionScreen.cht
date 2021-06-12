@@ -1,9 +1,8 @@
-[Spark X2SoldierClassTemplate]
-AbilityTreeTitles[0]="未來戰鬥"
-AbilityTreeTitles[1]="戰爭機器"
-AbilityTreeTitles[2]="XCOM"
-
 [UISL_CPS]
 strDisablePopup = "不要再顯示此消息"
 strPopupText = "\n你好, 這是你的Mod <font color='#005AB5'>[WOTC] Community Promotion Screen</font>\n\n我檢測到你所使用的Mod <font color='#ff0000'>[WOTC] New Promotion Screen by Default</font>是舊的版本.Mod<font color='#ff0000'>[WOTC] New Promotion Screen by Default</font>仍會生效, 但是你並不需要它\n\n我會代替處理<font color='#ff0000'>[WOTC] New Promotion Screen by Default</font>的一切以及更多,同時兼容其他所需要它的Mod. 因此建議你停用或卸載<font color='#ff0000'>[WOTC] New Promotion Screen by Default</font>"
 
+[X2EventListener_PromotionScreenOverrides]
+SparkAbilityTreeTitles[0]="未來戰鬥"
+SparkAbilityTreeTitles[1]="戰爭機器"
+SparkAbilityTreeTitles[2]="XCOM"

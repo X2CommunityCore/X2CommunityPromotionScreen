@@ -1,8 +1,8 @@
-[Spark X2SoldierClassTemplate]
-AbilityTreeTitles[0]="미래 전투"
-AbilityTreeTitles[1]="워머신"
-AbilityTreeTitles[2]="XCOM"
-
 [UISL_CPS]
 strDisablePopup = "다시 표시하지 않음."
 strPopupText = "\n안녕하세요 이것은 당신이 설치한 모드 <font color='#00ff00'>[WOTC] Community Promotion Screen</font> 입니다.\n\n구버전인 <font color='#ff0000'>[WOTC] New Promotion Screen by Default</font>를 사용하고 있습니다. 작동은 하지만, 필요하지 않습니다.\n\n이는 <font color='#ff0000'>[WOTC] New Promotion Screen by Default</font>가 하는 일이나 그 이상의 일을 하고 있으며, 그것을 필요로 하는 모든 모드와 함께 작동합니다.\n\n<font color='#ff0000'>[WOTC] New Promotion Screen by Default</font>를 비활성화하거나 제거하는 것이 좋습니다."
+
+[X2EventListener_PromotionScreenOverrides]
+SparkAbilityTreeTitles[0]="미래 전투"
+SparkAbilityTreeTitles[1]="워머신"
+SparkAbilityTreeTitles[2]="XCOM"

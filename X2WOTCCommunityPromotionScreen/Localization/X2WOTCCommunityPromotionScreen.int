@@ -26,3 +26,8 @@ DISABLE_NEWCLASS_POPUPS_Tips = "Normally a popup is displayed each time a rookie
 
 DISABLE_COMINT_POPUPS_Label = "Disable Combat Intelligence tutorial popup"
 DISABLE_COMINT_POPUPS_Tips = "Normally a popup is displayed when you enter the promotion screen of a high Combat Intelligence soldier for the first time in a campaign. You can disable this popup here."
+
+[X2EventListener_PromotionScreenOverrides]
+SparkAbilityTreeTitles[0]="Future Combat"
+SparkAbilityTreeTitles[1]="War Machine"
+SparkAbilityTreeTitles[2]="XCOM"
