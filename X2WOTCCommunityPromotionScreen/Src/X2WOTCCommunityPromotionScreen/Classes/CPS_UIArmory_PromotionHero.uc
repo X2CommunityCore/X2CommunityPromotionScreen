@@ -909,7 +909,7 @@ function bool CanPurchaseAbilityEx(int Rank, int Branch, name AbilityName, out s
 		bCanPurchaseAbility = false;
 		strLocReasonLocked = ReasonNotHighEnoughRank;
 	} 
-	else if (!bHasPurchasedClassPerkAtRank && !_bCanSpendAP && !bAsResistanceHero)
+	else if (bHasPurchasedClassPerkAtRank && !_bCanSpendAP && !bAsResistanceHero)
 	{	
 		// Don't allow non-hero units to purchase additional abilities with AP without a training center.
 		bCanPurchaseAbility = false;
