@@ -872,40 +872,20 @@ private function TriggerOverrideCanPurchaseAbilityProperties(out CPSAbilityMetaI
 	/// Here are the Ability Unlock Rules normally used by the Community Promotion Screen:
 	///
 	/// # Ability Unlock Rules
-	/// 1. Only abilities of the soldier's current rank or lower can be unlocked (bRankHighEnough).
-	/// 2. Soldier must be able to afford the Ability Point cost (bCanAffordAP). 
+	/// 1. Only abilities of the soldier's current rank or lower can be unlocked (bUnitMeetsRankRequirement).
+	/// 2. Soldier must be able to afford the Ability Point cost (bUnitCanAffordAP). 
 	/// Keep in mind in some cases the Ability Point cost can be zero.
 	/// 3. Soldier must meet the ability's prerequisites, 
-	/// e.g. have the required perks and no mutually exclusive perks (bMeetsAbilityPrerequisites).
+	/// e.g. have the required perks and no mutually exclusive perks (bUnitMeetsAbilityPrerequisites).
 	///
 	/// # Additional Ability Unlock Rules for regular soldiers (!bAsResistanceHero)
-	/// 1. Soldiers can unlock one soldier class ability per rank for free (bClassAbility && !bHasPurchasedClassPerkAtRank && bCanSpendAP).
+	/// 1. Soldiers can unlock one soldier class ability per rank for free (bClassAbility && !bUnitHasPurchasedClassPerkAtRank).
 	/// 2. Unlocking more than one ability per rank requires Training Center (bClassAbility && bHasPurchasedClassPerkAtRank && bCanSpendAP).
 	/// 3. Unlocking non-class perks requires Training Center (!bClassAbility && bCanSpendAP).
 	/// Keep in mind the Training Center requirement can be disabled by mod users in CPS's ModConfigMenu.
 	///
-	/// When applying these rules, the Community Promotion Screen looks at many properties.
-	///
-	/// # Properties that can be modified in this Tuple:
-	///	- bClassAbility - whether this ability is located within soldier class perk rows (e.g. not in the "XCOM" row or below).
-	///	- bRankHighEnough - this should not be modified carelessly, as it can lead to unexpected results, 
-	/// like regular soldiers being able to get a free perk on every visible rank off just one promotion. 
-	/// Even if the rank is high enough, the perks have to be actually visible to the player in order to unlock them. 
-	/// Keep in mind perks from unreached ranks are hidden by default.
-	///	- bMeetsAbilityPrerequisites
-	///	- bHasPurchasedClassPerkAtRank - whether the soldier has a soldier class perk unlocked at this rank already.
-	///	- bCanSpendAP - whether Training Center is built, or if the CPS is configured to disregard Training Center requirement. 
-	/// 
-	/// Changing these properties will affect CPS' decision only for this ability and only this soldier.
-	///
-	/// # Properties that can NOT be modified in this Tuple:
-	///	- bCanAffordAP - if you need to override this part of the decision, use one of the CPS events 
-	/// that can modify Ability Point Cost, such as 'CPS_OverrideAbilityPointCost'.
-	/// - bAsResistanceHero - whether the soldier counts as a Faction Hero or not. 
-	/// You can override this using 'CPS_OverrideIsUnitResistanceHero' event.
-	///
-	/// Keep in mind that CPS's decision based on these properties can still be overridden 
-	/// by the 'CPS_OverrideCanPurchaseAbility' event later.
+	/// Changes done to these properties by listeners will apply only for this ability and this soldier.
+	/// CPS's decision based on these properties can still be overridden by the 'CPS_OverrideCanPurchaseAbility' event later.
 	///
 	///```event
 	/// EventID: CPS_OverrideCanPurchaseAbilityProperties,
@@ -1050,9 +1030,9 @@ private function TriggerOverrideGetAbilityPointCostProperties(out CPSAbilityMeta
 	/// Ability is considered "powerful" if it's listed in `class'X2StrategyGameRulesetDataStructures'.default.PowerfulAbilities` array.
 	///
 	/// # Regular Soldiers
-	/// 1. First class ability unlock on this rank after being promoted to this rank is free (!bHasPurchasedClassPerkAtRank).
+	/// 1. First class ability unlock on this rank after being promoted to this rank is free (!bUnitHasPurchasedClassPerkAtRank).
 	/// 2. Default AP cost is used at all other times, except for:
-	/// 3. "Powerful" non-class abilities use the "powerful" cost (bPowerfulAbility && bClassAbility). 
+	/// 3. "Powerful" non-class abilities use the "powerful" cost (bPowerfulAbility && !bClassAbility). 
 	/// Again, this applies only to non-class perks, e.g. perks in the "XCOM" row.
 	/// 
 	/// # Faction Heroes (bAsResistanceHero)
@@ -1060,21 +1040,8 @@ private function TriggerOverrideGetAbilityPointCostProperties(out CPSAbilityMeta
 	/// 2. All "powerful" abilities use the "powerful" cost (bPowerfulAbility).
 	/// 3. Colonel Rank abilities use the "powerful" cost (bColonelRankAbility)
 	///
-	/// When applying these rules, the Community Promotion Screen looks at many properties.
-	///
-	/// # Properties that can be modified in this Tuple:
-	///	- bClassAbility - whether this ability is located within soldier class perk rows (e.g. not in the "XCOM" row or below).
-	///	- bHasPurchasedClassPerkAtRank - whether the soldier has a soldier class perk unlocked at this rank already.
-	/// - bPowerfulAbility
-	/// - bColonelRankAbility
-	/// Changing these properties will affect CPS' decision only for this ability and only this soldier.
-	///
-	/// # Properties that can NOT be modified in this Tuple:
-	/// - bAsResistanceHero - whether the soldier counts as a Faction Hero or not. 
-	/// You can override this using 'CPS_OverrideIsUnitResistanceHero' event.
-	///
-	/// Keep in mind that CPS's calculations based on these properties can still be overridden 
-	/// by the 'CPS_OverrideAbilityPointCost' event later.
+	/// Changes done to these properties by listeners will apply only for this ability and this soldier.
+	/// CPS's decision based on these properties can still be overridden by the 'CPS_OverrideAbilityPointCost' event later.
 	///
 	///```event
 	/// EventID: CPS_OverrideGetAbilityPointCostProperties,
@@ -1114,7 +1081,7 @@ private function int TriggerOverrideAbilityPointCost(out CPSAbilityMetaInfo Meta
 	/// to determine abiility point cost for this particular unit and this particular ability.
 	/// 
 	/// Community Promotion Screen always calculates proper Ability Point Cost for each ability,
-	/// which is passed in the Tuple as `iAbilityCost`. However, abilities unlocked 
+	/// which is passed in the Tuple as `iAbilityPointCost`. However, abilities unlocked 
 	/// by regular soldiers when they are first promoted to a new rank 
 	/// normally do not cost any Ability Points, which is relayed in the Tuple as `bPromotionFreeUnlock`.
 	///
@@ -1126,8 +1093,6 @@ private function int TriggerOverrideAbilityPointCost(out CPSAbilityMetaInfo Meta
 	/// This is done so that mods can easily make soldier class abilities cost their normal
 	/// amount of Ability Points by setting `bPromotionFreeUnlock` to `false`, 
 	/// even when they would have been free by vanilla logic.
-	///
-	/// Rank and Row begin their count at 0, with the first perk in the upper left corner of the promotion screen.
 	///
 	/// ```event
 	/// EventID: CPS_OverrideAbilityPointCost,
@@ -1587,14 +1552,32 @@ function bool IsUnitResistanceHero(XComGameState_Unit UnitState)
 private function FillAbilityMetaInfo(out CPSAbilityMetaInfo MetaInfo, XComGameState_Unit UnitState, const int Rank, const int Branch, const name AbilityName)
 {
 	MetaInfo.TemplateName = AbilityName;
+
+	// Rank and Row begin their count at 0, with the first perk in the upper left corner of the promotion screen.
 	MetaInfo.iRank = Rank;
 	MetaInfo.iRow = Branch;
+
 	MetaInfo.bPowerfulAbility = class'X2StrategyGameRulesetDataStructures'.default.PowerfulAbilities.Find(AbilityName) != INDEX_NONE;
+	
+	// Colonel rank abilities use the "powerful" ability point cost for Faction Heroes, unless they have a Brigadier rank.
 	MetaInfo.bColonelRankAbility = Rank == 6;
-	MetaInfo.bClassAbility = Branch < AbilitiesPerRank; // This will be "true" for 4th row of abilities for base WOTC Faction Heroes, since they have a randomized deck of perks, not a "true" XCOM row.
+
+	// Whether this ability is located within soldier class perk rows (e.g. not in the "XCOM" row or below).
+	// 4th row of abilities for "vanilla" Faction Heroes does count as "class abilities", since they use a random deck of perks, not a "true" XCOM row.
+	MetaInfo.bClassAbility = Branch < AbilitiesPerRank; 
+
 	MetaInfo.bUnitMeetsAbilityPrerequisites = UnitState.MeetsAbilityPrerequisites(AbilityName);
+
+	// Whether the soldier has a soldier class perk unlocked at this rank already.
 	MetaInfo.bUnitHasPurchasedClassPerkAtRank = UnitState.HasPurchasedPerkAtRank(Rank, AbilitiesPerRank);
+
+	// This should not be modified carelessly by event listeners, as it can lead to unexpected results, 
+	// like regular soldiers being able to get a free perk on every visible rank off just one promotion. 
+	// Even if the rank is high enough, the perks have to be actually visible to the player in order to unlock them, 
+	// and perks from unreached ranks are hidden by default.
 	MetaInfo.bUnitMeetsRankRequirement = Rank < UnitState.GetRank();
+
+	// Whether Training Center is built, or if the CPS is configured to disregard Training Center requirement.
 	MetaInfo.bUnitCanSpendAP = bCanSpendAP;
 	MetaInfo.bUnitCanAffordAP = CanAffordAbility(Rank, Branch);	
 
