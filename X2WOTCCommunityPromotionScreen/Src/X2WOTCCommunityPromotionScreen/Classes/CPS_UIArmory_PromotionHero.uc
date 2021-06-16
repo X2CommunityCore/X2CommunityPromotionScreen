@@ -861,24 +861,6 @@ function bool CanPurchaseAbilityEx(int Rank, int Branch, name AbilityName, out s
 	return TriggerOverrideCanPurchaseAbility(MetaInfo, UnitState, bCanPurchaseAbility, strLocReasonLocked);
 }
 
-private function FillAbilityMetaInfo(out CPSAbilityMetaInfo MetaInfo, XComGameState_Unit UnitState, const int Rank, const int Branch, const name AbilityName)
-{
-	MetaInfo.TemplateName = AbilityName;
-	MetaInfo.iRank = Rank;
-	MetaInfo.iRow = Branch;
-	MetaInfo.bPowerfulAbility = class'X2StrategyGameRulesetDataStructures'.default.PowerfulAbilities.Find(AbilityName) != INDEX_NONE;
-	MetaInfo.bColonelRankAbility = Rank == 6;
-	MetaInfo.bClassAbility = Branch < AbilitiesPerRank; // This will be "true" for 4th row of abilities for base WOTC Faction Heroes, since they have a randomized deck of perks, not a "true" XCOM row.
-	MetaInfo.bUnitMeetsAbilityPrerequisites = UnitState.MeetsAbilityPrerequisites(AbilityName);
-	MetaInfo.bUnitHasPurchasedClassPerkAtRank = UnitState.HasPurchasedPerkAtRank(Rank, AbilitiesPerRank);
-	MetaInfo.bUnitMeetsRankRequirement = Rank < UnitState.GetRank();
-	MetaInfo.bUnitCanSpendAP = bCanSpendAP;
-	MetaInfo.bUnitCanAffordAP = CanAffordAbility(Rank, Branch);	
-
-	// If this is a base game soldier with a promotion available, ability doesn't cost AP to unlock.
-	MetaInfo.bPromotionFreeUnlock = !bAsResistanceHero && MetaInfo.bClassAbility && !MetaInfo.bUnitHasPurchasedClassPerkAtRank;
-}
-
 private function TriggerOverrideCanPurchaseAbilityProperties(out CPSAbilityMetaInfo MetaInfo, XComGameState_Unit UnitState)
 {
 	local XComLWTuple Tuple;
@@ -946,43 +928,12 @@ private function TriggerOverrideCanPurchaseAbilityProperties(out CPSAbilityMetaI
 	///```	
 	Tuple = new class'XComLWTuple';
 	Tuple.Id = 'CPS_OverrideCanPurchaseAbilityProperties';
-	Tuple.Data.Add(14);
-	Tuple.Data[0].kind = XComLWTVName;
-	Tuple.Data[0].n = MetaInfo.TemplateName;
-	Tuple.Data[1].kind = XComLWTVInt;
-	Tuple.Data[1].i = MetaInfo.iRank;
-	Tuple.Data[2].kind = XComLWTVInt;
-	Tuple.Data[2].i = MetaInfo.iRow;
-	Tuple.Data[3].kind = XComLWTVBool;
-	Tuple.Data[3].b = MetaInfo.bPowerfulAbility;
-	Tuple.Data[4].kind = XComLWTVBool;
-	Tuple.Data[4].b = MetaInfo.bColonelRankAbility;
-	Tuple.Data[5].kind = XComLWTVBool;
-	Tuple.Data[5].b = MetaInfo.bClassAbility;
-	Tuple.Data[6].kind = XComLWTVBool;
-	Tuple.Data[6].b = MetaInfo.bUnitMeetsAbilityPrerequisites;
-	Tuple.Data[7].kind = XComLWTVBool;
-	Tuple.Data[7].b = MetaInfo.bUnitHasPurchasedClassPerkAtRank;
-	Tuple.Data[8].kind = XComLWTVBool;
-	Tuple.Data[8].b = MetaInfo.bUnitMeetsRankRequirement;
-	Tuple.Data[9].kind = XComLWTVBool;
-	Tuple.Data[9].b = MetaInfo.bUnitCanSpendAP;
-	Tuple.Data[10].kind = XComLWTVBool;
-	Tuple.Data[10].b = MetaInfo.bUnitCanAffordAP;
-	Tuple.Data[11].kind = XComLWTVBool;
-	Tuple.Data[11].b = MetaInfo.bPromotionFreeUnlock;
-	Tuple.Data[12].kind = XComLWTVBool;
-	Tuple.Data[12].b = bAsResistanceHero;
-	Tuple.Data[13].kind = XComLWTVInt;
-	Tuple.Data[13].i = AbilitiesPerRank;
+
+	FillTupleFromAbilityMetaInfo(MetaInfo, Tuple);
 
 	`XEVENTMGR.TriggerEvent(Tuple.Id, Tuple, UnitState);
 
-	MetaInfo.bClassAbility = Tuple.Data[5].b;
-	MetaInfo.bUnitMeetsAbilityPrerequisites = Tuple.Data[6].b;
-	MetaInfo.bUnitHasPurchasedClassPerkAtRank = Tuple.Data[7].b;
-	MetaInfo.bUnitMeetsRankRequirement = Tuple.Data[8].b;
-	MetaInfo.bUnitCanSpendAP = Tuple.Data[9].b;
+	UpdateAbilityMetaInfoFromTuple(MetaInfo, Tuple);
 }
 
 private function bool TriggerOverrideCanPurchaseAbility(CPSAbilityMetaInfo MetaInfo, XComGameState_Unit UnitState, const bool bCanPurchaseAbility, out string strLocReasonLocked)
@@ -1020,35 +971,10 @@ private function bool TriggerOverrideCanPurchaseAbility(CPSAbilityMetaInfo MetaI
 	///```	
 	Tuple = new class'XComLWTuple';
 	Tuple.Id = 'CPS_OverrideCanPurchaseAbility';
-	Tuple.Data.Add(16);
-	Tuple.Data[0].kind = XComLWTVName;
-	Tuple.Data[0].n = MetaInfo.TemplateName;
-	Tuple.Data[1].kind = XComLWTVInt;
-	Tuple.Data[1].i = MetaInfo.iRank;
-	Tuple.Data[2].kind = XComLWTVInt;
-	Tuple.Data[2].i = MetaInfo.iRow;
-	Tuple.Data[3].kind = XComLWTVBool;
-	Tuple.Data[3].b = MetaInfo.bPowerfulAbility;
-	Tuple.Data[4].kind = XComLWTVBool;
-	Tuple.Data[4].b = MetaInfo.bColonelRankAbility;
-	Tuple.Data[5].kind = XComLWTVBool;
-	Tuple.Data[5].b = MetaInfo.bClassAbility;
-	Tuple.Data[6].kind = XComLWTVBool;
-	Tuple.Data[6].b = MetaInfo.bUnitMeetsAbilityPrerequisites;
-	Tuple.Data[7].kind = XComLWTVBool;
-	Tuple.Data[7].b = MetaInfo.bUnitHasPurchasedClassPerkAtRank;
-	Tuple.Data[8].kind = XComLWTVBool;
-	Tuple.Data[8].b = MetaInfo.bUnitMeetsRankRequirement;
-	Tuple.Data[9].kind = XComLWTVBool;
-	Tuple.Data[9].b = MetaInfo.bUnitCanSpendAP;
-	Tuple.Data[10].kind = XComLWTVBool;
-	Tuple.Data[10].b = MetaInfo.bUnitCanAffordAP;
-	Tuple.Data[11].kind = XComLWTVBool;
-	Tuple.Data[11].b = MetaInfo.bPromotionFreeUnlock;
-	Tuple.Data[12].kind = XComLWTVBool;
-	Tuple.Data[12].b = bAsResistanceHero;
-	Tuple.Data[13].kind = XComLWTVInt;
-	Tuple.Data[13].i = AbilitiesPerRank;
+	
+	FillTupleFromAbilityMetaInfo(MetaInfo, Tuple);
+
+	Tuple.Data.Add(2);
 	Tuple.Data[14].kind = XComLWTVBool;
 	Tuple.Data[14].b = bCanPurchaseAbility;
 	Tuple.Data[15].kind = XComLWTVString;
@@ -1171,42 +1097,12 @@ private function TriggerOverrideGetAbilityPointCostProperties(out CPSAbilityMeta
 	///```	
 	Tuple = new class'XComLWTuple';
 	Tuple.Id = 'CPS_OverrideGetAbilityPointCostProperties';
-	Tuple.Data.Add(14);
-	Tuple.Data[0].kind = XComLWTVName;
-	Tuple.Data[0].n = MetaInfo.TemplateName;
-	Tuple.Data[1].kind = XComLWTVInt;
-	Tuple.Data[1].i = MetaInfo.iRank;
-	Tuple.Data[2].kind = XComLWTVInt;
-	Tuple.Data[2].i = MetaInfo.iRow;
-	Tuple.Data[3].kind = XComLWTVBool;
-	Tuple.Data[3].b = MetaInfo.bPowerfulAbility;
-	Tuple.Data[4].kind = XComLWTVBool;
-	Tuple.Data[4].b = MetaInfo.bColonelRankAbility;
-	Tuple.Data[5].kind = XComLWTVBool;
-	Tuple.Data[5].b = MetaInfo.bClassAbility;
-	Tuple.Data[6].kind = XComLWTVBool;
-	Tuple.Data[6].b = MetaInfo.bUnitMeetsAbilityPrerequisites;
-	Tuple.Data[7].kind = XComLWTVBool;
-	Tuple.Data[7].b = MetaInfo.bUnitHasPurchasedClassPerkAtRank;
-	Tuple.Data[8].kind = XComLWTVBool;
-	Tuple.Data[8].b = MetaInfo.bUnitMeetsRankRequirement;
-	Tuple.Data[9].kind = XComLWTVBool;
-	Tuple.Data[9].b = MetaInfo.bUnitCanSpendAP;
-	Tuple.Data[10].kind = XComLWTVBool;
-	Tuple.Data[10].b = MetaInfo.bUnitCanAffordAP;
-	Tuple.Data[11].kind = XComLWTVBool;
-	Tuple.Data[11].b = MetaInfo.bPromotionFreeUnlock;
-	Tuple.Data[12].kind = XComLWTVBool;
-	Tuple.Data[12].b = bAsResistanceHero;
-	Tuple.Data[13].kind = XComLWTVInt;
-	Tuple.Data[13].i = AbilitiesPerRank;
+	
+	FillTupleFromAbilityMetaInfo(MetaInfo, Tuple);
 
 	`XEVENTMGR.TriggerEvent(Tuple.Id, Tuple, UnitState);
 
-	MetaInfo.bPowerfulAbility = Tuple.Data[3].b;
-	MetaInfo.bColonelRankAbility = Tuple.Data[4].b;
-	MetaInfo.bClassAbility = Tuple.Data[5].b; 
-	MetaInfo.bUnitHasPurchasedClassPerkAtRank = Tuple.Data[7].b;	
+	UpdateAbilityMetaInfoFromTuple(MetaInfo, Tuple);
 }
 
 private function int TriggerOverrideAbilityPointCost(out CPSAbilityMetaInfo MetaInfo, XComGameState_Unit UnitState, const int iAbilityPointCost)
@@ -1255,42 +1151,19 @@ private function int TriggerOverrideAbilityPointCost(out CPSAbilityMetaInfo Meta
 	///```	
 	Tuple = new class'XComLWTuple';
 	Tuple.Id = 'CPS_OverrideAbilityPointCost';
-	Tuple.Data.Add(15);
-	Tuple.Data[0].kind = XComLWTVName;
-	Tuple.Data[0].n = MetaInfo.TemplateName;
-	Tuple.Data[1].kind = XComLWTVInt;
-	Tuple.Data[1].i = MetaInfo.iRank;
-	Tuple.Data[2].kind = XComLWTVInt;
-	Tuple.Data[2].i = MetaInfo.iRow;
-	Tuple.Data[3].kind = XComLWTVBool;
-	Tuple.Data[3].b = MetaInfo.bPowerfulAbility;
-	Tuple.Data[4].kind = XComLWTVBool;
-	Tuple.Data[4].b = MetaInfo.bColonelRankAbility;
-	Tuple.Data[5].kind = XComLWTVBool;
-	Tuple.Data[5].b = MetaInfo.bClassAbility;
-	Tuple.Data[6].kind = XComLWTVBool;
-	Tuple.Data[6].b = MetaInfo.bUnitMeetsAbilityPrerequisites;
-	Tuple.Data[7].kind = XComLWTVBool;
-	Tuple.Data[7].b = MetaInfo.bUnitHasPurchasedClassPerkAtRank;
-	Tuple.Data[8].kind = XComLWTVBool;
-	Tuple.Data[8].b = MetaInfo.bUnitMeetsRankRequirement;
-	Tuple.Data[9].kind = XComLWTVBool;
-	Tuple.Data[9].b = MetaInfo.bUnitCanSpendAP;
-	Tuple.Data[10].kind = XComLWTVBool;
-	Tuple.Data[10].b = MetaInfo.bUnitCanAffordAP;
-	Tuple.Data[11].kind = XComLWTVBool;
-	Tuple.Data[11].b = MetaInfo.bPromotionFreeUnlock;
-	Tuple.Data[12].kind = XComLWTVBool;
-	Tuple.Data[12].b = bAsResistanceHero;
-	Tuple.Data[13].kind = XComLWTVInt;
-	Tuple.Data[13].i = AbilitiesPerRank;
+
+	FillTupleFromAbilityMetaInfo(MetaInfo, Tuple);
+
+	Tuple.Data.Add(1);
 	Tuple.Data[14].kind = XComLWTVInt;
 	Tuple.Data[14].i = iAbilityPointCost;
 
 	`XEVENTMGR.TriggerEvent(Tuple.Id, Tuple, UnitState);
 
+	UpdateAbilityMetaInfoFromTuple(MetaInfo, Tuple);
+
 	// Ability Point cost should not be applied if this ability is unlocked by a regular soldier for free on their promotion.
-	if (Tuple.Data[11].b) // bPromotionFreeUnlock
+	if (MetaInfo.bPromotionFreeUnlock)
 	{
 		return 0;
 	}
@@ -1709,6 +1582,69 @@ function bool IsUnitResistanceHero(XComGameState_Unit UnitState)
 	`XEVENTMGR.TriggerEvent(Tuple.Id, Tuple, UnitState);
 
 	return Tuple.Data[0].b;
+}
+
+private function FillAbilityMetaInfo(out CPSAbilityMetaInfo MetaInfo, XComGameState_Unit UnitState, const int Rank, const int Branch, const name AbilityName)
+{
+	MetaInfo.TemplateName = AbilityName;
+	MetaInfo.iRank = Rank;
+	MetaInfo.iRow = Branch;
+	MetaInfo.bPowerfulAbility = class'X2StrategyGameRulesetDataStructures'.default.PowerfulAbilities.Find(AbilityName) != INDEX_NONE;
+	MetaInfo.bColonelRankAbility = Rank == 6;
+	MetaInfo.bClassAbility = Branch < AbilitiesPerRank; // This will be "true" for 4th row of abilities for base WOTC Faction Heroes, since they have a randomized deck of perks, not a "true" XCOM row.
+	MetaInfo.bUnitMeetsAbilityPrerequisites = UnitState.MeetsAbilityPrerequisites(AbilityName);
+	MetaInfo.bUnitHasPurchasedClassPerkAtRank = UnitState.HasPurchasedPerkAtRank(Rank, AbilitiesPerRank);
+	MetaInfo.bUnitMeetsRankRequirement = Rank < UnitState.GetRank();
+	MetaInfo.bUnitCanSpendAP = bCanSpendAP;
+	MetaInfo.bUnitCanAffordAP = CanAffordAbility(Rank, Branch);	
+
+	// If this is a base game soldier with a promotion available, ability doesn't cost AP to unlock.
+	MetaInfo.bPromotionFreeUnlock = !bAsResistanceHero && MetaInfo.bClassAbility && !MetaInfo.bUnitHasPurchasedClassPerkAtRank;
+}
+
+private function FillTupleFromAbilityMetaInfo(const CPSAbilityMetaInfo MetaInfo, XComLWTuple Tuple)
+{
+	Tuple.Data.Add(14);
+	Tuple.Data[0].kind = XComLWTVName;
+	Tuple.Data[0].n = MetaInfo.TemplateName;
+	Tuple.Data[1].kind = XComLWTVInt;
+	Tuple.Data[1].i = MetaInfo.iRank;
+	Tuple.Data[2].kind = XComLWTVInt;
+	Tuple.Data[2].i = MetaInfo.iRow;
+	Tuple.Data[3].kind = XComLWTVBool;
+	Tuple.Data[3].b = MetaInfo.bPowerfulAbility;
+	Tuple.Data[4].kind = XComLWTVBool;
+	Tuple.Data[4].b = MetaInfo.bColonelRankAbility;
+	Tuple.Data[5].kind = XComLWTVBool;
+	Tuple.Data[5].b = MetaInfo.bClassAbility;
+	Tuple.Data[6].kind = XComLWTVBool;
+	Tuple.Data[6].b = MetaInfo.bUnitMeetsAbilityPrerequisites;
+	Tuple.Data[7].kind = XComLWTVBool;
+	Tuple.Data[7].b = MetaInfo.bUnitHasPurchasedClassPerkAtRank;
+	Tuple.Data[8].kind = XComLWTVBool;
+	Tuple.Data[8].b = MetaInfo.bUnitMeetsRankRequirement;
+	Tuple.Data[9].kind = XComLWTVBool;
+	Tuple.Data[9].b = MetaInfo.bUnitCanSpendAP;
+	Tuple.Data[10].kind = XComLWTVBool;
+	Tuple.Data[10].b = MetaInfo.bUnitCanAffordAP;
+	Tuple.Data[11].kind = XComLWTVBool;
+	Tuple.Data[11].b = MetaInfo.bPromotionFreeUnlock;
+	Tuple.Data[12].kind = XComLWTVBool;
+	Tuple.Data[12].b = bAsResistanceHero;
+	Tuple.Data[13].kind = XComLWTVInt;
+	Tuple.Data[13].i = AbilitiesPerRank;
+}
+
+private function UpdateAbilityMetaInfoFromTuple(out CPSAbilityMetaInfo MetaInfo, const XComLWTuple Tuple)
+{
+	MetaInfo.bPowerfulAbility = Tuple.Data[3].b;
+	MetaInfo.bColonelRankAbility = Tuple.Data[4].b;
+	MetaInfo.bClassAbility = Tuple.Data[5].b;
+	MetaInfo.bUnitMeetsAbilityPrerequisites = Tuple.Data[6].b;
+	MetaInfo.bUnitHasPurchasedClassPerkAtRank = Tuple.Data[7].b;
+	MetaInfo.bUnitMeetsRankRequirement = Tuple.Data[8].b;
+	MetaInfo.bUnitCanSpendAP = Tuple.Data[9].b;
+	MetaInfo.bPromotionFreeUnlock = Tuple.Data[11].b;
 }
 
 function ResizeScreenForBrigadierRank()
