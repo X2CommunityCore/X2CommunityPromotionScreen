@@ -142,7 +142,7 @@ function CacheSoldierInfo()
 
 	ClassTemplate = Unit.GetSoldierClassTemplate();	
 	bHasBrigadierRank = Unit.AbilityTree.Length > 7;
-	GetAbilitiesPerRank();
+	CacheAbilitiesPerRank();
 	bCanSpendAP = CanSpendAP();
 	bAsResistanceHero = IsUnitResistanceHero(Unit);
 }
@@ -1213,23 +1213,26 @@ final function int GetDefaultAbilityPointCostForRank(const int Rank)
 
 function bool GetCustomAbilityCost(const XComGameState_Unit UnitState, const name AbilityName, out int AbilityCost)
 {
-	local int i;
+	local array<CustomClassAbilityCost> CustomCosts;
+	local CustomClassAbilityCost CustomCost;
 
-	for (i = 0; i < class'NPSBDP_UIArmory_PromotionHero'.default.ClassCustomAbilityCost.Length; i++)
+	CustomCosts = class'NPSBDP_UIArmory_PromotionHero'.default.ClassCustomAbilityCost;
+
+	// Look for the class-specific first, so that it takes priority.
+	foreach CustomCosts(CustomCost)
 	{
-		if (class'NPSBDP_UIArmory_PromotionHero'.default.ClassCustomAbilityCost[i].ClassName == ClassTemplate.DataName && 
-			class'NPSBDP_UIArmory_PromotionHero'.default.ClassCustomAbilityCost[i].AbilityName == AbilityName)
+		if (CustomCost.ClassName == ClassTemplate.DataName && CustomCost.AbilityName == AbilityName)
 		{
-			AbilityCost = class'NPSBDP_UIArmory_PromotionHero'.default.ClassCustomAbilityCost[i].AbilityCost;
+			AbilityCost = CustomCost.AbilityCost;
 			return true;
 		}
 	}
-	for (i = 0; i < class'NPSBDP_UIArmory_PromotionHero'.default.ClassCustomAbilityCost.Length; i++)
+
+	foreach CustomCosts(CustomCost)
 	{
-		if (class'NPSBDP_UIArmory_PromotionHero'.default.ClassCustomAbilityCost[i].ClassName == 'AnySoldierClass' && 
-			class'NPSBDP_UIArmory_PromotionHero'.default.ClassCustomAbilityCost[i].AbilityName == AbilityName)
+		if (CustomCost.ClassName == '' && CustomCost.AbilityName == AbilityName)
 		{
-			AbilityCost = class'NPSBDP_UIArmory_PromotionHero'.default.ClassCustomAbilityCost[i].AbilityCost;
+			AbilityCost = CustomCost.AbilityCost;
 			return true;
 		}
 	}
@@ -1548,7 +1551,7 @@ function bool CanSpendAP()
 	return `XCOMHQ.HasFacilityByName('RecoveryCenter');
 }
 
-function GetAbilitiesPerRank()
+function CacheAbilitiesPerRank()
 {	
 	local int RankIndex;
 
@@ -1838,16 +1841,4 @@ simulated function AddChildTweenBetween(string ChildPath, String Prop, float Sta
 	}
 
 	MC.EndOp();
-}
-
-// Deprecated by Issue #24
-function bool HasBrigadierRank()
-{
-	local XComGameState_Unit Unit;
-	
-	Unit = GetUnit();
-	
-	`LOG(self.Class.name @ GetFuncName() @ Unit.GetFullName() @ Unit.AbilityTree.Length, bLog, 'PromotionScreen');
-
-	return Unit.AbilityTree.Length > 7;
 }
