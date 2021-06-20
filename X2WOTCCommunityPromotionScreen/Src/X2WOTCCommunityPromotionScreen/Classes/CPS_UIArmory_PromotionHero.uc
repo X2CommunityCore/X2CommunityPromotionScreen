@@ -48,7 +48,6 @@ struct CPSAbilityMetaInfo
 	var bool bUnitHasPurchasedClassPerkAtRank;
 	var bool bUnitMeetsRankRequirement;
 	var bool bUnitCanSpendAP;
-	var bool bUnitCanAffordAP;
 	var bool bPromotionFreeUnlock;
 };
 
@@ -852,7 +851,7 @@ function bool CanPurchaseAbilityEx(int Rank, int Branch, name AbilityName, out s
 		bCanPurchaseAbility = false;
 		strLocReasonLocked = ReasonLacksPrerequisites;
 	}
-	else if (!MetaInfo.bUnitCanAffordAP)
+	else if (!CanAffordAbility(Rank, Branch))
 	{
 		bCanPurchaseAbility = false;
 		strLocReasonLocked = ReasonNotEnoughAP;
@@ -873,7 +872,7 @@ private function TriggerOverrideCanPurchaseAbilityProperties(out CPSAbilityMetaI
 	///
 	/// # Ability Unlock Rules
 	/// 1. Only abilities of the soldier's current rank or lower can be unlocked (bUnitMeetsRankRequirement).
-	/// 2. Soldier must be able to afford the Ability Point cost (bUnitCanAffordAP). 
+	/// 2. Soldier must be able to afford the Ability Point cost. 
 	/// Keep in mind in some cases the Ability Point cost can be zero.
 	/// 3. Soldier must meet the ability's prerequisites, 
 	/// e.g. have the required perks and no mutually exclusive perks (bUnitMeetsAbilityPrerequisites).
@@ -899,7 +898,6 @@ private function TriggerOverrideCanPurchaseAbilityProperties(out CPSAbilityMetaI
 	///				inout bool bUnitHasPurchasedClassPerkAtRank,
 	///				inout bool bUnitMeetsRankRequirement,
 	///				inout bool bUnitCanSpendAP,
-	///				inout bool bUnitCanAffordAP,
 	///				in bool bPromotionFreeUnlock,
 	///				in bool bAsResistanceHero,
 	///				in int AbilitiesPerRank],
@@ -940,10 +938,10 @@ private function bool TriggerOverrideCanPurchaseAbility(CPSAbilityMetaInfo MetaI
 	///				in bool bUnitHasPurchasedClassPerkAtRank,
 	///				in bool bUnitMeetsRankRequirement,
 	///				in bool bUnitCanSpendAP,
-	///				in bool bUnitCanAffordAP,
 	///				in bool bPromotionFreeUnlock,
 	///				in bool bAsResistanceHero,
 	///				in int AbilitiesPerRank,
+	///				in bool bUnitCanAffordAP,
 	///				inout bool bCanPurchaseAbility,
 	///				inout string strLocReasonLocked],
 	/// EventSource: XComGameState_Unit (UnitState),
@@ -954,7 +952,9 @@ private function bool TriggerOverrideCanPurchaseAbility(CPSAbilityMetaInfo MetaI
 	
 	FillTupleFromAbilityMetaInfo(MetaInfo, Tuple);
 
-	Tuple.Data.Add(2);
+	Tuple.Data.Add(3);
+	Tuple.Data[13].kind = XComLWTVBool;
+	Tuple.Data[13].b = CanAffordAbility(MetaInfo.iRank, MetaInfo.iRow);
 	Tuple.Data[14].kind = XComLWTVBool;
 	Tuple.Data[14].b = bCanPurchaseAbility;
 	Tuple.Data[15].kind = XComLWTVString;
@@ -1055,7 +1055,6 @@ private function TriggerOverrideGetAbilityPointCostProperties(out CPSAbilityMeta
 	///				inout bool bUnitHasPurchasedClassPerkAtRank,
 	///				in bool bUnitMeetsRankRequirement,
 	///				in bool bUnitCanSpendAP,
-	///				in bool bUnitCanAffordAP,
 	///				in bool bPromotionFreeUnlock,
 	///				in bool bAsResistanceHero,
 	///				in int AbilitiesPerRank],
@@ -1106,7 +1105,6 @@ private function int TriggerOverrideAbilityPointCost(out CPSAbilityMetaInfo Meta
 	///				in bool bUnitHasPurchasedClassPerkAtRank,
 	///				in bool bUnitMeetsRankRequirement,
 	///				in bool bUnitCanSpendAP,
-	///				in bool bUnitCanAffordAP,
 	///				in bool bPromotionFreeUnlock,
 	///				in bool bAsResistanceHero,
 	///				in int AbilitiesPerRank,
@@ -1579,7 +1577,6 @@ private function FillAbilityMetaInfo(out CPSAbilityMetaInfo MetaInfo, XComGameSt
 
 	// Whether Training Center is built, or if the CPS is configured to disregard Training Center requirement.
 	MetaInfo.bUnitCanSpendAP = bCanSpendAP;
-	MetaInfo.bUnitCanAffordAP = CanAffordAbility(Rank, Branch);	
 
 	// If this is a base game soldier with a promotion available, ability doesn't cost AP to unlock.
 	MetaInfo.bPromotionFreeUnlock = !bAsResistanceHero && MetaInfo.bClassAbility && !MetaInfo.bUnitHasPurchasedClassPerkAtRank;
@@ -1587,7 +1584,7 @@ private function FillAbilityMetaInfo(out CPSAbilityMetaInfo MetaInfo, XComGameSt
 
 private function FillTupleFromAbilityMetaInfo(const CPSAbilityMetaInfo MetaInfo, XComLWTuple Tuple)
 {
-	Tuple.Data.Add(14);
+	Tuple.Data.Add(13);
 	Tuple.Data[0].kind = XComLWTVName;
 	Tuple.Data[0].n = MetaInfo.TemplateName;
 	Tuple.Data[1].kind = XComLWTVInt;
@@ -1609,13 +1606,11 @@ private function FillTupleFromAbilityMetaInfo(const CPSAbilityMetaInfo MetaInfo,
 	Tuple.Data[9].kind = XComLWTVBool;
 	Tuple.Data[9].b = MetaInfo.bUnitCanSpendAP;
 	Tuple.Data[10].kind = XComLWTVBool;
-	Tuple.Data[10].b = MetaInfo.bUnitCanAffordAP;
+	Tuple.Data[10].b = MetaInfo.bPromotionFreeUnlock;
 	Tuple.Data[11].kind = XComLWTVBool;
-	Tuple.Data[11].b = MetaInfo.bPromotionFreeUnlock;
-	Tuple.Data[12].kind = XComLWTVBool;
-	Tuple.Data[12].b = bAsResistanceHero;
-	Tuple.Data[13].kind = XComLWTVInt;
-	Tuple.Data[13].i = AbilitiesPerRank;
+	Tuple.Data[11].b = bAsResistanceHero;
+	Tuple.Data[12].kind = XComLWTVInt;
+	Tuple.Data[12].i = AbilitiesPerRank;
 }
 
 private function UpdateAbilityMetaInfoFromTuple(out CPSAbilityMetaInfo MetaInfo, const XComLWTuple Tuple)
@@ -1627,7 +1622,7 @@ private function UpdateAbilityMetaInfoFromTuple(out CPSAbilityMetaInfo MetaInfo,
 	MetaInfo.bUnitHasPurchasedClassPerkAtRank = Tuple.Data[7].b;
 	MetaInfo.bUnitMeetsRankRequirement = Tuple.Data[8].b;
 	MetaInfo.bUnitCanSpendAP = Tuple.Data[9].b;
-	MetaInfo.bPromotionFreeUnlock = Tuple.Data[11].b;
+	MetaInfo.bPromotionFreeUnlock = Tuple.Data[10].b;
 }
 
 function ResizeScreenForBrigadierRank()
