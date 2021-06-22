@@ -1370,7 +1370,7 @@ simulated function ConfirmAbilityCallbackEx(Name Action)
 		iAbilityPointCost = GetAbilityPointCost(PendingRank, PendingBranch);
 		bSuccess = UpdatedUnit.BuySoldierProgressionAbility(UpdateState, PendingRank, PendingBranch, iAbilityPointCost);
 
-		if(bSuccess)
+		if (bSuccess)
 		{
 			// Issue #43
 			TriggerAbilityPurchased(UpdatedUnit, PendingRank, PendingBranch, iAbilityPointCost, UpdateState);
