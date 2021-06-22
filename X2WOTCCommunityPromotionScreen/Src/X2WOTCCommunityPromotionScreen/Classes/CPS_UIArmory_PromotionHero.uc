@@ -1360,7 +1360,7 @@ simulated function ConfirmAbilityCallbackEx(Name Action)
 	local XComGameStateContext_ChangeContainer ChangeContainer;
 	local int iAbilityPointCost;
 
-	if(Action == 'eUIAction_Accept')
+	if (Action == 'eUIAction_Accept')
 	{
 		History = `XCOMHISTORY;
 		ChangeContainer = class'XComGameStateContext_ChangeContainer'.static.CreateEmptyChangeContainer("Soldier Promotion");
