@@ -1349,7 +1349,7 @@ simulated function ConfirmAbilitySelection(int Rank, int Branch)
 }
 
 // This is a copy of `ComfirmAbilityCallback` so that we can inject some
-// hooks into to, because some mods will want to add behaviour around when
+// hooks into it, because some mods will want to add behaviour around when
 // the player selects/purchases an ability.
 simulated function ConfirmAbilityCallbackEx(Name Action)
 {
