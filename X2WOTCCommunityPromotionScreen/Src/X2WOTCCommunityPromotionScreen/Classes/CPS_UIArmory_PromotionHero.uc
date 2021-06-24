@@ -1118,8 +1118,8 @@ private function int TriggerOverrideAbilityPointCost(out CPSAbilityMetaInfo Meta
 	FillTupleFromAbilityMetaInfo(MetaInfo, Tuple);
 
 	Tuple.Data.Add(1);
-	Tuple.Data[14].kind = XComLWTVInt;
-	Tuple.Data[14].i = iAbilityPointCost;
+	Tuple.Data[13].kind = XComLWTVInt;
+	Tuple.Data[13].i = iAbilityPointCost;
 
 	`XEVENTMGR.TriggerEvent(Tuple.Id, Tuple, UnitState);
 
