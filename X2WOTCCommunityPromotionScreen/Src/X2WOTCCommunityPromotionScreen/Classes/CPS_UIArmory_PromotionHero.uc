@@ -1130,7 +1130,7 @@ private function int TriggerOverrideAbilityPointCost(out CPSAbilityMetaInfo Meta
 	{
 		return 0;
 	}
-	return Tuple.Data[14].i; // iAbilityPointCost
+	return Tuple.Data[13].i; // iAbilityPointCost
 }
 
 final function int GetDefaultAbilityPointCostForRank(const int Rank)
