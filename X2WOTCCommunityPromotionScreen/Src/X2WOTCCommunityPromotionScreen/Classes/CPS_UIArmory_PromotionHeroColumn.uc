@@ -4,6 +4,13 @@ var int Offset;
 
 var array<int> LockedAbilityIndices; // Issue #42
 
+// Start Issue #53
+var array<UIImage> TagBackgroundIcons; 
+const AbilityTagUnitValuePrefix = "CPS_AbilityTag_";
+// End Issue #53
+
+`include(X2WOTCCommunityPromotionScreen\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
+
 function OnAbilityInfoClicked(UIButton Button)
 {
 	local X2AbilityTemplate AbilityTemplate;
@@ -39,13 +46,27 @@ function SelectAbility(int idx)
 	PromotionScreen = UIArmory_PromotionHero(Screen);
 
 	if( PromotionScreen.OwnsAbility(AbilityNames[idx]) )
+	{
 		OnInfoButtonMouseEvent(InfoButtons[idx], class'UIUtilities_Input'.const.FXS_L_MOUSE_UP);
+	}
 	else if (bEligibleForPurchase && PromotionScreen.CanPurchaseAbility(Rank, idx + Offset, AbilityNames[idx]))
+	{
 		PromotionScreen.ConfirmAbilitySelection(Rank, idx);
+	}
 	else if (!PromotionScreen.IsAbilityLocked(Rank))
+	{
 		OnInfoButtonMouseEvent(InfoButtons[idx], class'UIUtilities_Input'.const.FXS_L_MOUSE_UP);
+	}
+	else if (!IsAbilityIconLocked(idx)) // Issue #53 - tag an ability if it is not hidden.
+	{
+		TagAbilityForUnit(idx, PromotionScreen.GetUnit());
+		Movie.Pres.PlayUISound(eSUISound_MenuSelect);
+		//PromotionScreen.PopulateData();
+	}
 	else
+	{
 		Movie.Pres.PlayUISound(eSUISound_MenuClickNegative);
+	}
 }
 
 // Override to handle Scrolling
@@ -174,7 +195,14 @@ function AS_SetIconState(int Index, bool bShowHighlight, string Image, string La
 	{
 		LockedAbilityIndices.AddItem(Index);
 	}
+
 	super.AS_SetIconState(Index, bShowHighlight, Image, Label, IconState, ForegroundColor, BackgroundColor, bIsConnected);
+
+	// Start Issue #53
+	if (IsAbilityTagged(AbilityNames[Index]))
+	{
+		AS_DrawAbilityTag(Index, 1);
+	} // End Issue #53
 }
 
 function bool IsAbilityIconLocked(const int Index)
@@ -182,3 +210,87 @@ function bool IsAbilityIconLocked(const int Index)
 	return LockedAbilityIndices.Find(Index) != INDEX_NONE;
 }
 // End Issue #42
+
+// Start Issue #53
+function AS_DrawAbilityTag(int Index, int iTag)
+{
+	local UIImage	TagBackgroundIcon;
+	local UIText	TagText;
+
+	// Check if the icon already exists and show rather than create a new icon every time.
+	foreach TagBackgroundIcons(TagBackgroundIcon)
+	{
+		if (TagBackgroundIcon.MCName == name("Tag_" $ Index))
+		{
+			TagBackgroundIcon.Show();
+			return;
+		}
+	}
+
+	TagBackgroundIcon = AbilityIcons[Index].Spawn(class'UIImage', AbilityIcons[Index]).InitImage(name("Tag_" $ Index), "img:///UILibrary_CPS.UI.TagBorder");
+	TagBackgroundIcon.SetPosition(33, 40).SetSize(38, 38);
+	TagBackgroundIcons.AddItem(TagBackgroundIcon);
+
+	TagText = TagBackgroundIcon.Spawn(class'UIText', TagBackgroundIcon).InitText(name("Tag_" $ Index));
+	if (Index > 9)
+	{
+		//	 Smaller font size for double digits
+		TagText.SetCenteredText(class'UIUtilities_Text'.static.GetColoredText(string(90 + Index), eUIState_Normal, 20), TagBackgroundIcon);
+		TagText.Y += 6;
+	}
+	else
+	{
+		TagText.SetCenteredText(class'UIUtilities_Text'.static.GetColoredText(string(90 + Index), eUIState_Normal, 24), TagBackgroundIcon);
+		
+		TagText.Y += 4;
+		TagText.X -= 1;
+	}
+	
+	TagText.RealizeLocation();
+}
+
+function AS_HideAbilityTag(int Index)
+{
+	local UIImage TagBackgroundIcon;
+
+	foreach TagBackgroundIcons(TagBackgroundIcon)
+	{
+		if (TagBackgroundIcon.MCName == name("Tag_" $ Index))
+		{
+			TagBackgroundIcon.Hide();
+		}
+	}
+}
+
+function TagAbilityForUnit(const int Index, XComGameState_Unit UnitState)
+{
+	local XComGameState_Unit	NewUnitState;
+	local XComGameState			NewGameState;
+	local UnitValue				UV;
+
+	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("Tag Ability For Unit");
+	NewUnitState = XComGameState_Unit(NewGameState.ModifyStateObject(UnitState.Class, UnitState.ObjectID));
+	
+	if (NewUnitState.GetUnitValue(name(AbilityTagUnitValuePrefix $ AbilityNames[Index]), UV))
+	{
+		NewUnitState.ClearUnitValue(name(AbilityTagUnitValuePrefix $ AbilityNames[Index]));
+		AS_HideAbilityTag(Index);
+	}
+	else
+	{
+		NewUnitState.SetUnitFloatValue(name(AbilityTagUnitValuePrefix $ AbilityNames[Index]), 1.0f, eCleanup_Never);
+		AS_DrawAbilityTag(Index, 1);
+	}
+	`GAMERULES.SubmitGameState(NewGameState);
+}
+
+function bool IsAbilityTagged(const name TemplateName)
+{
+	local XComGameState_Unit UnitState;
+	local UnitValue UV;
+
+	UnitState = UIArmory_PromotionHero(Screen).GetUnit();
+
+	return UnitState.GetUnitValue(name(AbilityTagUnitValuePrefix $ TemplateName), UV);
+}
+// End Issue #53

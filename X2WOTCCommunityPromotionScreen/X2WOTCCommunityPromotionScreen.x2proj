@@ -12,6 +12,7 @@
   <ItemGroup>
     <Folder Include="Config\" />
     <Folder Include="Localization\" />
+    <Folder Include="Content" />
     <Folder Include="Src\" />
     <Folder Include="Src\ModConfigMenuAPI\" />
     <Folder Include="Src\ModConfigMenuAPI\Classes\" />
@@ -28,6 +29,9 @@
       <SubType>Content</SubType>
     </Content>
     <Content Include="Config\XComX2WOTCCommunityPromotionScreen_DEFAULT.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Content\UILibrary_CPS.upk">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Localization\X2WOTCCommunityPromotionScreen.chn">
