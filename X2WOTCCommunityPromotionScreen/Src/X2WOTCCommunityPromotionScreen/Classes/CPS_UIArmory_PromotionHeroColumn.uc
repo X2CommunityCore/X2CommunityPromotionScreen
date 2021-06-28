@@ -8,6 +8,12 @@ var array<int> LockedAbilityIndices; // Issue #42
 var array<UIImage>	TagBackgroundIcons; // These are parallel arrays
 var array<UIText>	TagTexts;
 const AbilityTagPrefix = "CPS_AbilityTag_";
+
+struct AbilityTagStruct
+{
+	var name AbilityName;
+	var int iTag;
+};
 // End Issue #53
 
 `include(X2WOTCCommunityPromotionScreen\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
@@ -240,22 +246,67 @@ function bool IsAbilityIconLocked(const int Index)
 ///
 /// Each perk column stores parallel arrays of Tag Icons and Tag Text UI elements,
 /// though, again, the text is used only in the advanced mode.
+
 function ToggleAbilityTagForUnit(const int Index, XComGameState_Unit UnitState)
 {
 	local UnitValue	UV;
-	local int		iTag;
 
 	// Tag already present? Then hide it.
 	if (UnitState.GetUnitValue(name(AbilityTagPrefix $ AbilityNames[Index]), UV))
 	{
-		CPS_UIArmory_PromotionHero(Screen).RemoveAbilityTag(AbilityNames[Index]);
-		AS_HideAbilityTag(Index);
+		RemoveAbilityTag(Index);
 	}
 	else // Tag not present yet? Then add it.
 	{
-		iTag = CPS_UIArmory_PromotionHero(Screen).SetAbilityTag(AbilityNames[Index]);
-		AS_DrawAbilityTag(Index, iTag);
+		SetAbilityTag(Index);
 	}
+}
+
+function SetAbilityTag(const int Index)
+{
+	local CPS_UIArmory_PromotionHeroColumn	Column;
+	local CPS_UIArmory_PromotionHero		PromotionScreen;
+	local int								iAbilityTags;
+	local name								AbilityName;
+	local UnitValue							UV;
+	local XComGameState_Unit				UnitState;
+	local XComGameState						NewGameState;
+	local int iTag;
+	local int i;
+
+	PromotionScreen = CPS_UIArmory_PromotionHero(Screen);
+	if (PromotionScreen == none)
+		return;
+		
+	// 1. Build an array of all ability tags currently present on the unit.
+	UnitState = PromotionScreen.GetUnit();
+	for (i = 0; i < PromotionScreen.Columns.Length; i++)
+	{
+		Column = CPS_UIArmory_PromotionHeroColumn(PromotionScreen.Columns[i]);
+		if (Column == none)
+			return;
+
+		foreach Column.AbilityNames(AbilityName)
+		{
+			if (UnitState.GetUnitValue(name(AbilityTagPrefix $ AbilityName), UV))
+			{
+				iAbilityTags++;
+			}
+		}
+	}
+
+	// 2. Set new tag value.
+	iTag = iAbilityTags + 1;
+
+	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("Tag Ability For Unit");
+	UnitState = XComGameState_Unit(NewGameState.ModifyStateObject(UnitState.Class, UnitState.ObjectID));
+
+	UnitState.SetUnitFloatValue(name(Column.AbilityTagPrefix $ AbilityNames[Index]), iTag, eCleanup_Never);
+
+	`GAMERULES.SubmitGameState(NewGameState);
+
+	// 3. Set the new tag value in the UI.
+	AS_DrawAbilityTag(Index, iTag);
 }
 
 function AS_DrawAbilityTag(int Index, int iTag = -1)
@@ -334,6 +385,79 @@ function AS_DrawAbilityTag(int Index, int iTag = -1)
 	}	
 }
 
+function RemoveAbilityTag(const int Index)
+{
+	local CPS_UIArmory_PromotionHeroColumn	Column;
+	local CPS_UIArmory_PromotionHero		PromotionScreen;
+	local array<AbilityTagStruct>			AbilityTags;
+	local AbilityTagStruct					AbilityTag;
+	local name								AbilityName;
+	local UnitValue							UV;
+	local XComGameState_Unit				UnitState;
+	local XComGameState						NewGameState;
+	local int i;
+
+	PromotionScreen = CPS_UIArmory_PromotionHero(Screen);
+	if (PromotionScreen == none)
+		return;
+
+	// Exit early if there's no tag for this ability.
+	UnitState = PromotionScreen.GetUnit();
+	if (!UnitState.GetUnitValue(name(AbilityTagPrefix $ AbilityNames[Index]), UV))
+	{
+		return;
+	}
+
+	// 1. Remove the tag.
+	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("Tag Ability For Unit");
+	UnitState = XComGameState_Unit(NewGameState.ModifyStateObject(UnitState.Class, UnitState.ObjectID));
+	UnitState.ClearUnitValue(name(AbilityTagPrefix $ AbilityNames[Index]));
+	
+	// 2. Build an array of all other ability tags currently present on the unit.
+	for (i = 0; i < PromotionScreen.Columns.Length; i++)
+	{
+		Column = CPS_UIArmory_PromotionHeroColumn(PromotionScreen.Columns[i]);
+		if (Column == none)
+			return;
+					
+		foreach Column.AbilityNames(AbilityName)
+		{
+			if (UnitState.GetUnitValue(name(AbilityTagPrefix $ AbilityName), UV))
+			{
+				AbilityTag.AbilityName = AbilityName;
+				AbilityTag.iTag = UV.fValue;
+				AbilityTags.AddItem(AbilityTag);
+			}
+		}
+	}
+
+	// 3. Sort in order of ascending tag values
+	AbilityTags.Sort(SortAbilityTags);
+
+	// 4. Reset tags to start from 1 and increase by one.
+	for (i = 0; i < AbilityTags.Length; i++)
+	{
+		AbilityTags[i].iTag = i + 1;
+	}
+
+	// 5. Set new tag values.
+	foreach AbilityTags(AbilityTag)
+	{
+		UnitState.SetUnitFloatValue(name(AbilityTagPrefix $ AbilityTag.AbilityName), AbilityTag.iTag, eCleanup_Never);
+	}
+	`GAMERULES.SubmitGameState(NewGameState);
+
+	// 6. Hide tag in UI
+	AS_HideAbilityTag(Index);
+
+	// 7. Update UI text of all tags to account for new values.
+	for (i = 0; i < PromotionScreen.Columns.Length; i++)
+	{
+		Column = CPS_UIArmory_PromotionHeroColumn(PromotionScreen.Columns[i]);		
+		Column.UpdateAllTagTexts();
+	}	
+}
+
 function AS_HideAbilityTag(int Index)
 {
 	local UIImage TagBackgroundIcon;
@@ -345,6 +469,17 @@ function AS_HideAbilityTag(int Index)
 			TagBackgroundIcon.Hide();
 		}
 	}
+}
+
+simulated function int SortAbilityTags(AbilityTagStruct TagA, AbilityTagStruct TagB)
+{
+	if (TagA.iTag < TagB.iTag)
+		return 1;
+
+	if (TagA.iTag > TagB.iTag)
+		return -1;
+
+	return 0;
 }
 
 function UpdateAllTagTexts()
