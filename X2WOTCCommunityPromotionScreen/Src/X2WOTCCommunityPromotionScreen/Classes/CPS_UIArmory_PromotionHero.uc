@@ -1055,7 +1055,7 @@ private function TriggerOverrideGetAbilityPointCostProperties(out CPSAbilityMeta
 	///		inout bool bUnitHasPurchasedClassPerkAtRank,
 	///		in bool bUnitMeetsRankRequirement,
 	///		in bool bUnitCanSpendAP,
-	///		in bool bPromotionFreeUnlock,
+	///		inout bool bPromotionFreeUnlock,
 	///		in bool bAsResistanceHero,
 	///		in int AbilitiesPerRank],
 	/// EventSource: XComGameState_Unit (UnitState),
