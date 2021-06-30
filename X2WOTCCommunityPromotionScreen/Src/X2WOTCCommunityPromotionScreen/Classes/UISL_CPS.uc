@@ -14,7 +14,7 @@ var config bool bDisablePopup;
 event OnInit(UIScreen Screen)
 {
 	// Show the popup when playing with -review launch argument (non-debug mode).
-	if(UIShell(Screen) != none && UIShell(Screen).DebugMenuContainer == none && !bDisablePopup)
+	if (UIShell(Screen) != none && UIShell(Screen).DebugMenuContainer == none && !bDisablePopup && IsModActive('NewPromotionScreenbyDefault'))
 	{
 		Screen.SetTimer(3.0f, false, nameof(DisplayWarningPopup), self);
 	}
@@ -43,4 +43,21 @@ simulated function WarningPopupCB(Name eAction, UICallbackData xUserData)
 		bDisablePopup = true;
 		self.SaveConfig();
 	}
+}
+
+static final function bool IsModActive(name ModName)
+{
+    local XComOnlineEventMgr    EventManager;
+    local int                   Index;
+
+    EventManager = `ONLINEEVENTMGR;
+
+    for (Index = EventManager.GetNumDLC() - 1; Index >= 0; Index--) 
+    {
+        if (EventManager.GetDLCNames(Index) == ModName) 
+        {
+            return true;
+        }
+    }
+    return false;
 }
