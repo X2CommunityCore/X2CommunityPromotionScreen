@@ -1043,6 +1043,8 @@ private function TriggerOverrideGetAbilityPointCostProperties(out CPSAbilityMeta
 	/// Changes done to these properties by listeners will apply only for this ability and this soldier.
 	/// CPS's decision based on these properties can still be overridden by the 'CPS_OverrideAbilityPointCost' event later.
 	///
+	/// Note: `bPromotionFreeUnlock` will be updated automatically based on values of `bAsResistanceHero`, `bClassAbility` and `bUnitHasPurchasedClassPerkAtRank`.
+	///
 	///```event
 	/// EventID: CPS_OverrideGetAbilityPointCostProperties,
 	/// EventData: [in name AbilityTemplateName,
@@ -1622,7 +1624,7 @@ private function UpdateAbilityMetaInfoFromTuple(out CPSAbilityMetaInfo MetaInfo,
 	MetaInfo.bUnitHasPurchasedClassPerkAtRank = Tuple.Data[7].b;
 	MetaInfo.bUnitMeetsRankRequirement = Tuple.Data[8].b;
 	MetaInfo.bUnitCanSpendAP = Tuple.Data[9].b;
-	MetaInfo.bPromotionFreeUnlock = Tuple.Data[10].b;
+	MetaInfo.bPromotionFreeUnlock = !bAsResistanceHero && MetaInfo.bClassAbility && !MetaInfo.bUnitHasPurchasedClassPerkAtRank;
 }
 
 function ResizeScreenForBrigadierRank()
