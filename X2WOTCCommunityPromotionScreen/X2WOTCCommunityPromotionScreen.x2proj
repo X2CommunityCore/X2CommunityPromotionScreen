@@ -60,42 +60,11 @@
     <Content Include="Localization\X2WOTCCommunityPromotionScreen.rus">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Localization\XComGame.chn">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="Localization\XComGame.cht">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="Localization\XComGame.deu">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="Localization\XComGame.esn">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="Localization\XComGame.fra">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="Localization\XComGame.ita">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="Localization\XComGame.jpn">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="Localization\XComGame.kor">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="Localization\XComGame.pol">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="Localization\XComGame.rus">
-      <SubType>Content</SubType>
-    </Content>
     <Content Include="ReadMe.txt" />
     <Content Include="ModPreview.jpg" />
     <Content Include="Config\XComEditor.ini" />
     <Content Include="Config\XComEngine.ini" />
     <Content Include="Config\XComGame.ini" />
-    <Content Include="Localization\XComGame.int" />
     <Content Include="Src\ModConfigMenuAPI\Classes\MCM_API.uc">
       <SubType>Content</SubType>
     </Content>
