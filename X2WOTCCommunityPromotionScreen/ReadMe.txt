@@ -7,6 +7,7 @@ It replaces the standard soldier promotion screen with a modified version of the
 [list]
 [*] [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=667104300][WotC] Mod Config Menu[/url][/b] support.
 [*] Improved controller support.
+[*] All-new ability tagging system to assist in planning soldier's ability unlocks. Disabled by default, needs to be enabled in Mod Config Menu.
 [*] Improved support for other mods, including Highlander.
 [*] Custom ability point cost can now be configured for all soldier classes at the same time. Class-specific cost still takes priority.
 [*] Added localization for SPARK ability row titles in all languages; this will not interfere with mods adding their own localization for them.
