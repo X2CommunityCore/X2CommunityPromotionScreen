@@ -5,8 +5,9 @@ var int Offset;
 var array<int> LockedAbilityIndices; // Issue #42
 
 // Start Issue #53
-var array<UIImage> TagBackgroundIcons; 
-const AbilityTagUnitValuePrefix = "CPS_AbilityTag_";
+var array<UIImage>	TagBackgroundIcons; // These are parallel arrays
+var array<UIText>	TagTexts;
+const AbilityTagPrefix = "CPS_AbilityTag_";
 // End Issue #53
 
 `include(X2WOTCCommunityPromotionScreen\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
@@ -42,6 +43,7 @@ function OnAbilityInfoClicked(UIButton Button)
 function SelectAbility(int idx)
 {
 	local UIArmory_PromotionHero PromotionScreen;
+	local bool bSoundPlayed;
 	
 	PromotionScreen = UIArmory_PromotionHero(Screen);
 
@@ -49,24 +51,31 @@ function SelectAbility(int idx)
 	{
 		OnInfoButtonMouseEvent(InfoButtons[idx], class'UIUtilities_Input'.const.FXS_L_MOUSE_UP);
 	}
-	else if (bEligibleForPurchase && PromotionScreen.CanPurchaseAbility(Rank, idx + Offset, AbilityNames[idx]))
+	else 
 	{
-		PromotionScreen.ConfirmAbilitySelection(Rank, idx);
-	}
-	else if (!PromotionScreen.IsAbilityLocked(Rank))
-	{
-		OnInfoButtonMouseEvent(InfoButtons[idx], class'UIUtilities_Input'.const.FXS_L_MOUSE_UP);
-	}
-	else if (!IsAbilityIconLocked(idx)) // Issue #53 - tag an ability if it is not hidden.
-	{
-		TagAbilityForUnit(idx, PromotionScreen.GetUnit());
-		Movie.Pres.PlayUISound(eSUISound_MenuSelect);
-		//PromotionScreen.PopulateData();
-	}
-	else
-	{
-		Movie.Pres.PlayUISound(eSUISound_MenuClickNegative);
-	}
+		// Start Issue #53 - 
+		// When player clicks on a visible ability that has not been purchased yet, toggle its ability tag.
+		if (!IsAbilityIconLocked(idx) && `GETMCMVAR(ABILITY_TREE_PLANNER_MODE) > 0) 
+		{
+			ToggleAbilityTagForUnit(idx, PromotionScreen.GetUnit());
+			Movie.Pres.PlayUISound(eSUISound_MenuSelect);
+			bSoundPlayed = true;
+		}
+		// End Issue #53
+
+		if (bEligibleForPurchase && PromotionScreen.CanPurchaseAbility(Rank, idx + Offset, AbilityNames[idx]))
+		{
+			PromotionScreen.ConfirmAbilitySelection(Rank, idx);
+		}
+		else if (!PromotionScreen.IsAbilityLocked(Rank))
+		{
+			OnInfoButtonMouseEvent(InfoButtons[idx], class'UIUtilities_Input'.const.FXS_L_MOUSE_UP);
+		}
+		else if (!bSoundPlayed)
+		{
+			Movie.Pres.PlayUISound(eSUISound_MenuClickNegative);
+		}
+	}	
 }
 
 // Override to handle Scrolling
@@ -198,11 +207,8 @@ function AS_SetIconState(int Index, bool bShowHighlight, string Image, string La
 
 	super.AS_SetIconState(Index, bShowHighlight, Image, Label, IconState, ForegroundColor, BackgroundColor, bIsConnected);
 
-	// Start Issue #53
-	if (IsAbilityTagged(AbilityNames[Index]))
-	{
-		AS_DrawAbilityTag(Index, 1);
-	} // End Issue #53
+	// Issue #53 - draw ability tag if the ability is tagged.
+	AS_DrawAbilityTag(Index);
 }
 
 function bool IsAbilityIconLocked(const int Index)
@@ -212,41 +218,120 @@ function bool IsAbilityIconLocked(const int Index)
 // End Issue #42
 
 // Start Issue #53
-function AS_DrawAbilityTag(int Index, int iTag)
+/// The following is an explanation of the tag system as a whole.
+/// Function: allow the player to tag abilities on the promotion screen,
+/// Purpose: planning the future ability tree for individual soldiers or simply marking noteworthy perks.
+/// To have meaningful usability, the tag system requires the "Show Perks From Unreached Ranks"
+/// MCM config to be enabled.
+/// When it is so, the player can switch the tag system between three modes:
+/// 1. Disabled
+/// 2. Basic - abilities are tagged with a simple hexagon icon.
+/// 3. Advanced - abilities are tagged by numbers in the order the player clicks on them.
+/// I.e. the first ability to be tagged will have number "1" on it, the second will have "2", etc.
+/// These numbers can be used by the player as a sort of priority or unlock order. 
+/// Either way, tags are purely informative, the player still has to unlock all perks manually.
+///
+/// When the player clicks on an ability, the SelectAbility() runs and will call
+/// ToggleAbilityTagForUnit(), which will either show or hide the tag appropriately.
+///
+/// Information about which abilities are tagged is stored on the unit in the form
+/// of Unit Values, where the name of the value includes the ability template name,
+/// and the value is the order, though it used only in the Advanced mode.
+///
+/// Each perk column stores parallel arrays of Tag Icons and Tag Text UI elements,
+/// though, again, the text is used only in the advanced mode.
+function ToggleAbilityTagForUnit(const int Index, XComGameState_Unit UnitState)
+{
+	local UnitValue	UV;
+	local int		iTag;
+
+	// Tag already present? Then hide it.
+	if (UnitState.GetUnitValue(name(AbilityTagPrefix $ AbilityNames[Index]), UV))
+	{
+		CPS_UIArmory_PromotionHero(Screen).RemoveAbilityTag(AbilityNames[Index]);
+		AS_HideAbilityTag(Index);
+	}
+	else // Tag not present yet? Then add it.
+	{
+		iTag = CPS_UIArmory_PromotionHero(Screen).SetAbilityTag(AbilityNames[Index]);
+		AS_DrawAbilityTag(Index, iTag);
+	}
+}
+
+function AS_DrawAbilityTag(int Index, int iTag = -1)
 {
 	local UIImage	TagBackgroundIcon;
 	local UIText	TagText;
+	local int		TagIdx;
 
-	// Check if the icon already exists and show rather than create a new icon every time.
-	foreach TagBackgroundIcons(TagBackgroundIcon)
+	// If called without a tag specified, try to get it from the unit.
+	if (iTag == -1)
 	{
-		if (TagBackgroundIcon.MCName == name("Tag_" $ Index))
+		iTag = GetAbilityTag(AbilityNames[Index]);
+		if (iTag == -1)
 		{
-			TagBackgroundIcon.Show();
+			// Exit early if the tag doesn't exist.
 			return;
 		}
 	}
 
-	TagBackgroundIcon = AbilityIcons[Index].Spawn(class'UIImage', AbilityIcons[Index]).InitImage(name("Tag_" $ Index), "img:///UILibrary_CPS.UI.TagBorder");
-	TagBackgroundIcon.SetPosition(33, 40).SetSize(38, 38);
-	TagBackgroundIcons.AddItem(TagBackgroundIcon);
+	// Hide all tags if tags are disabled or the ability is not visible anymore 
+	// (presumably because MCM setting to show unreached perks has been disabled)
+	if (`GETMCMVAR(ABILITY_TREE_PLANNER_MODE) == 0 || IsAbilityIconLocked(Index))
+	{
+		foreach TagBackgroundIcons(TagBackgroundIcon, TagIdx)
+		{
+			TagBackgroundIcon.Hide(); // This will hide the associated Tag Text automatically.
+		}
+		return;
+	}
 
-	TagText = TagBackgroundIcon.Spawn(class'UIText', TagBackgroundIcon).InitText(name("Tag_" $ Index));
-	if (Index > 9)
+	// Check if the icon already exists and show it rather than create a new icon every time.
+	foreach TagBackgroundIcons(TagBackgroundIcon, TagIdx)
 	{
-		//	 Smaller font size for double digits
-		TagText.SetCenteredText(class'UIUtilities_Text'.static.GetColoredText(string(90 + Index), eUIState_Normal, 20), TagBackgroundIcon);
-		TagText.Y += 6;
+		if (TagBackgroundIcon.MCName == name("Tag_" $ Index))
+		{
+			TagBackgroundIcon.Show();
+
+			if (`GETMCMVAR(ABILITY_TREE_PLANNER_MODE) == 2)
+			{
+				TagText = TagTexts[TagIdx];
+				SetTagText(TagText, string(iTag), TagBackgroundIcon);
+			}
+			return;
+		}
 	}
-	else
+
+	// If we're still here, then there's no tag icon for this ability yet, so create one.
+	if (`GETMCMVAR(ABILITY_TREE_PLANNER_MODE) == 1)
 	{
-		TagText.SetCenteredText(class'UIUtilities_Text'.static.GetColoredText(string(90 + Index), eUIState_Normal, 24), TagBackgroundIcon);
-		
-		TagText.Y += 4;
-		TagText.X -= 1;
+		TagBackgroundIcon = AbilityIcons[Index].Spawn(class'UIImage', AbilityIcons[Index]).InitImage(name("Tag_" $ Index), "img:///UILibrary_CPS.UI.TagIcon");
+		TagBackgroundIcon.SetPosition(33, 40).SetSize(38, 38);
+		TagBackgroundIcons.AddItem(TagBackgroundIcon);
 	}
-	
-	TagText.RealizeLocation();
+	else if (`GETMCMVAR(ABILITY_TREE_PLANNER_MODE) == 2)
+	{
+		TagBackgroundIcon = AbilityIcons[Index].Spawn(class'UIImage', AbilityIcons[Index]).InitImage(name("Tag_" $ Index), "img:///UILibrary_CPS.UI.TagBorder");
+		TagBackgroundIcon.SetPosition(33, 40).SetSize(38, 38);
+		TagBackgroundIcons.AddItem(TagBackgroundIcon);
+
+		TagText = TagBackgroundIcon.Spawn(class'UIText', TagBackgroundIcon).InitText(name("Tag_" $ Index));
+
+		SetTagText(TagText, string(iTag), TagBackgroundIcon);
+		// Reposition the text based on whether it's double digits or not.
+		if (iTag > 9)
+		{
+			TagText.Y += 6;
+		}
+		else
+		{
+			TagText.Y += 4;
+			TagText.X -= 1;
+		}
+		TagText.RealizeLocation();
+
+		TagTexts.AddItem(TagText);
+	}	
 }
 
 function AS_HideAbilityTag(int Index)
@@ -262,35 +347,55 @@ function AS_HideAbilityTag(int Index)
 	}
 }
 
-function TagAbilityForUnit(const int Index, XComGameState_Unit UnitState)
+function UpdateAllTagTexts()
 {
-	local XComGameState_Unit	NewUnitState;
-	local XComGameState			NewGameState;
-	local UnitValue				UV;
+	local UIText	TagText;
+	local int		iTag;
+	local int		i;
+	local int		TagIdx;
 
-	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("Tag Ability For Unit");
-	NewUnitState = XComGameState_Unit(NewGameState.ModifyStateObject(UnitState.Class, UnitState.ObjectID));
-	
-	if (NewUnitState.GetUnitValue(name(AbilityTagUnitValuePrefix $ AbilityNames[Index]), UV))
+	for (i = 0; i < AbilityNames.Length; i++)
 	{
-		NewUnitState.ClearUnitValue(name(AbilityTagUnitValuePrefix $ AbilityNames[Index]));
-		AS_HideAbilityTag(Index);
+		iTag = GetAbilityTag(AbilityNames[i]);
+		if (iTag > 0)
+		{
+			foreach TagTexts(TagText, TagIdx)
+			{
+				if (TagText.MCName == name("Tag_" $ i))
+				{
+					SetTagText(TagText, string(iTag), TagBackgroundIcons[TagIdx]);
+					break;
+				}
+			}
+		}
 	}
-	else
-	{
-		NewUnitState.SetUnitFloatValue(name(AbilityTagUnitValuePrefix $ AbilityNames[Index]), 1.0f, eCleanup_Never);
-		AS_DrawAbilityTag(Index, 1);
-	}
-	`GAMERULES.SubmitGameState(NewGameState);
 }
 
-function bool IsAbilityTagged(const name TemplateName)
+function int GetAbilityTag(const name TemplateName)
 {
 	local XComGameState_Unit UnitState;
 	local UnitValue UV;
 
 	UnitState = UIArmory_PromotionHero(Screen).GetUnit();
 
-	return UnitState.GetUnitValue(name(AbilityTagUnitValuePrefix $ TemplateName), UV);
+	if (UnitState.GetUnitValue(name(AbilityTagPrefix $ TemplateName), UV))
+	{
+		return UV.fValue;
+	}
+
+	return -1;
+}
+
+function SetTagText(out UIText TagText, string strText, UIPanel BackgroundIconParentPanel)
+{
+	if (Len(strText) > 1)
+	{
+		// Smaller font size for double digits
+		TagText.SetCenteredText(class'UIUtilities_Text'.static.GetColoredText(strText, eUIState_Normal, 20), BackgroundIconParentPanel);
+	}
+	else
+	{
+		TagText.SetCenteredText(class'UIUtilities_Text'.static.GetColoredText(strText, eUIState_Normal, 24), BackgroundIconParentPanel);
+	}
 }
 // End Issue #53
