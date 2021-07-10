@@ -4,15 +4,16 @@ var int Offset;
 
 var array<int> LockedAbilityIndices; // Issue #42
 
-// Start Issue #53
-var array<UIImage>	TagBackgroundIcons; // These are parallel arrays
-var array<UIText>	TagTexts;
+// Start Issue #53 - These are parallel arrays.
+// Stores references to ability tag icons. Each perk in the column can potentially have its own tag icon,
+// which can be visible or hidden depending on if the ability is currently tagged or not.
+var array<CPS_UIAbilityTag>	AbilityTagIcons;
+// Unit Value prefix.
 const AbilityTagPrefix = "CPS_AbilityTag_";
-
 struct AbilityTagStruct
 {
 	var name AbilityName;
-	var int iTag;
+	var int iTagText;
 };
 // End Issue #53
 
@@ -216,7 +217,9 @@ function AS_SetIconState(int Index, bool bShowHighlight, string Image, string La
 	super.AS_SetIconState(Index, bShowHighlight, Image, Label, IconState, ForegroundColor, BackgroundColor, bIsConnected);
 
 	// Issue #53 - draw ability tag if the ability is tagged.
-	AS_DrawAbilityTag(Index);
+	// Hide the tag icon if it is present on an ability that's not supposed to be tagged,
+	// this can happen when scrolling.
+	AS_SyncAbilityTagIcon(Index);
 }
 
 function bool IsAbilityIconLocked(const int Index)
@@ -231,7 +234,7 @@ function bool IsAbilityIconLocked(const int Index)
 /// Purpose: planning the future ability tree for individual soldiers or simply marking noteworthy perks.
 /// To have meaningful usability, the tag system requires the "Show Perks From Unreached Ranks"
 /// MCM config to be enabled.
-/// When it is so, the player can switch the tag system between three modes:
+/// Then the player can switch the tag system between three modes:
 /// 1. Disabled
 /// 2. Basic - abilities are tagged with a simple hexagon icon.
 /// 3. Advanced - abilities are tagged by numbers in the order the player clicks on them.
@@ -244,198 +247,148 @@ function bool IsAbilityIconLocked(const int Index)
 ///
 /// Information about which abilities are tagged is stored on the unit in the form
 /// of Unit Values, where the name of the value includes the ability template name,
-/// and the value is the order, though it used only in the Advanced mode.
+/// and the value is the order, though it is used only in the Advanced mode.
 ///
-/// Each perk column stores parallel arrays of Tag Icons and Tag Text UI elements,
-/// though, again, the text is used only in the advanced mode.
+/// Each perk column stores an array of created ability tag icons.
 
+// Called when the user clicks on an ability. Makes state changes.
 function ToggleAbilityTagForUnit(const int Index, XComGameState_Unit UnitState)
 {
-	local UnitValue	UV;
-
-	// Tag already present? Then hide it.
-	if (UnitState.GetUnitValue(name(AbilityTagPrefix $ AbilityNames[Index]), UV))
+	if (IsAbilityTaggedForUnit(Index, UnitState))
 	{
 		RemoveAbilityTag(Index);
 	}
-	else // Tag not present yet? Then add it.
+	else
 	{
 		SetAbilityTag(Index);
 	}
 }
 
-function SetAbilityTag(const int Index)
+private function bool IsAbilityTaggedForUnit(const int Index, XComGameState_Unit UnitState)
 {
-	local CPS_UIArmory_PromotionHeroColumn	Column;
-	local CPS_UIArmory_PromotionHero		PromotionScreen;
-	local int								iAbilityTags;
-	local name								AbilityName;
-	local UnitValue							UV;
-	local XComGameState_Unit				UnitState;
-	local XComGameState						NewGameState;
-	local int iTag;
-	local int i;
+	local UnitValue	UV;
 
-	PromotionScreen = CPS_UIArmory_PromotionHero(Screen);
-	if (PromotionScreen == none)
-		return;
-		
-	// 1. Build an array of all ability tags currently present on the unit.
-	UnitState = PromotionScreen.GetUnit();
-	for (i = 0; i < PromotionScreen.Columns.Length; i++)
+	return UnitState.GetUnitValue(name(AbilityTagPrefix $ AbilityNames[Index]), UV);
+}
+
+// Called when the user opens or scrolls the promotion screen. Pure UI, makes no state changes.
+private function AS_SyncAbilityTagIcon(int Index)
+{
+	local int iTagText;
+
+	// Hide ability tag if it's not visible anymore,
+	// presumably because MCM setting to show unreached perks has been disabled.
+	if (IsAbilityIconLocked(Index))
 	{
-		Column = CPS_UIArmory_PromotionHeroColumn(PromotionScreen.Columns[i]);
-		if (Column == none)
-			return;
-
-		foreach Column.AbilityNames(AbilityName)
-		{
-			if (UnitState.GetUnitValue(name(AbilityTagPrefix $ AbilityName), UV))
-			{
-				iAbilityTags++;
-			}
-		}
+		AS_HideAbilityTag(Index);
+		return;
 	}
 
-	// 2. Set new tag value.
-	iTag = iAbilityTags + 1;
+	iTagText = GetAbilityTagText(AbilityNames[Index]);
+	if (iTagText == -1)
+	{
+		AS_HideAbilityTag(Index);
+	}
+	else
+	{ 
+		AS_DrawAbilityTag(Index, iTagText);
+	}
+}
+
+final function SetAbilityTag(const int Index)
+{
+	local int					iNumAbilityTags;
+	local XComGameState_Unit	UnitState;
+	local XComGameState			NewGameState;
+	local int					iTagText;
+	
+	UnitState = GetUnit();
+	iNumAbilityTags = GetNumAbilityTags(UnitState);
+	iTagText = iNumAbilityTags + 1;
 
 	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("Tag Ability For Unit");
 	UnitState = XComGameState_Unit(NewGameState.ModifyStateObject(UnitState.Class, UnitState.ObjectID));
 
-	UnitState.SetUnitFloatValue(name(Column.AbilityTagPrefix $ AbilityNames[Index]), iTag, eCleanup_Never);
+	// Unit value has two purposes:
+	// 1. Track if this ability is tagged or not.
+	// 2. In advanced tagging mode, track the order in which abilities have been tagged, 
+	// the displayed tag text should correspond to the value of the Unit Value.
+	UnitState.SetUnitFloatValue(name(AbilityTagPrefix $ AbilityNames[Index]), iTagText, eCleanup_Never);
 
 	`GAMERULES.SubmitGameState(NewGameState);
 
-	// 3. Set the new tag value in the UI.
-	AS_DrawAbilityTag(Index, iTag);
+	AS_DrawAbilityTag(Index, iTagText);
 }
 
-function AS_DrawAbilityTag(int Index, int iTag = -1)
+private function int GetNumAbilityTags(XComGameState_Unit UnitState)
 {
-	local UIImage	TagBackgroundIcon;
-	local UIText	TagText;
-	local int		TagIdx;
+	local UnitValue					UV;
+	local int						iNumAbilityTags;
+	local SoldierRankAbilities		AbilityTree;
+	local SoldierClassAbilityType	AbilityType;
 
-	// If called without a tag specified, try to get it from the unit.
-
-	// iTag is used in two ways:
-	// 1. Helps determine whether this ability is tagged or now.
-	// 2. If the ability is tagged, iTag stores the order number that should be displayed on the tag icon (only in "advanced" mode).
-	if (iTag == -1)
+	foreach UnitState.AbilityTree(AbilityTree)
 	{
-		iTag = GetAbilityTag(AbilityNames[Index]);
-		if (iTag == -1)
+		foreach AbilityTree.Abilities(AbilityType)
 		{
-			// Hide the tag icon if it exists when it's not supposed to,
-			// can occur while scrolling.
-			AS_HideAbilityTag(Index);
-
-			// Exit early if the tag doesn't exist.
-			return;
+			if (UnitState.GetUnitValue(name(AbilityTagPrefix $ AbilityType.AbilityName), UV))
+			{
+				iNumAbilityTags++;
+			}
 		}
 	}
+	return iNumAbilityTags;
+}
 
-	// Hide all tags if tags are disabled or the ability is not visible anymore 
-	// (presumably because MCM setting to show unreached perks has been disabled)
-	if (`GETMCMVAR(ABILITY_TREE_PLANNER_MODE) == 0 || IsAbilityIconLocked(Index))
-	{
-		foreach TagBackgroundIcons(TagBackgroundIcon, TagIdx)
-		{
-			TagBackgroundIcon.Hide(); // This will hide the associated Tag Text automatically.
-		}
-		return;
-	}
+private function AS_DrawAbilityTag(int Index, int iTagText)
+{
+	local CPS_UIAbilityTag AbilityTagIcon;
 
 	// Check if the icon already exists and show it rather than create a new icon every time.
-	foreach TagBackgroundIcons(TagBackgroundIcon, TagIdx)
+	foreach AbilityTagIcons(AbilityTagIcon)
 	{
-		if (TagBackgroundIcon.MCName == name("Tag_" $ Index))
+		if (AbilityTagIcon.iRankIndex == Index)
 		{
-			TagBackgroundIcon.Show();
-
-			if (`GETMCMVAR(ABILITY_TREE_PLANNER_MODE) == 2)
-			{
-				TagText = TagTexts[TagIdx];
-				SetTagText(TagText, string(iTag), TagBackgroundIcon);
-			}
+			AbilityTagIcon.AbilityName = AbilityNames[Index];
+			AbilityTagIcon.Show();
+			AbilityTagIcon.MaybeSetTagNumberText(iTagText);
 			return;
 		}
 	}
 
-	// If we're still here, then there's no tag icon for this ability yet, so create one.
-	if (`GETMCMVAR(ABILITY_TREE_PLANNER_MODE) == 1)
-	{
-		TagBackgroundIcon = AbilityIcons[Index].Spawn(class'UIImage', AbilityIcons[Index]).InitImage(name("Tag_" $ Index), "img:///UILibrary_CPS.UI.TagIcon");
-		TagBackgroundIcon.SetPosition(33, 40).SetSize(38, 38);
-		TagBackgroundIcons.AddItem(TagBackgroundIcon);
-	}
-	else if (`GETMCMVAR(ABILITY_TREE_PLANNER_MODE) == 2)
-	{
-		TagBackgroundIcon = AbilityIcons[Index].Spawn(class'UIImage', AbilityIcons[Index]).InitImage(name("Tag_" $ Index), "img:///UILibrary_CPS.UI.TagBorder");
-		TagBackgroundIcon.SetPosition(33, 40).SetSize(38, 38);
-		TagBackgroundIcons.AddItem(TagBackgroundIcon);
-
-		TagText = TagBackgroundIcon.Spawn(class'UIText', TagBackgroundIcon).InitText(name("Tag_" $ Index));
-
-		SetTagText(TagText, string(iTag), TagBackgroundIcon);
-		// Reposition the text based on whether it's double digits or not.
-		if (iTag > 9)
-		{
-			TagText.Y += 6;
-		}
-		else
-		{
-			TagText.Y += 4;
-			TagText.X -= 1;
-		}
-		TagText.RealizeLocation();
-
-		TagTexts.AddItem(TagText);
-	}	
+	// If we're still here, then there's no tag icon for this spot on the perk column yet, so create one.
+	AbilityTagIcon = AbilityIcons[Index].Spawn(class'CPS_UIAbilityTag', AbilityIcons[Index]).InitAbilityTag(AbilityNames[Index]);
+	AbilityTagIcon.MaybeSetTagNumberText(iTagText);
+	AbilityTagIcon.iRankIndex = Index;
+	AbilityTagIcons.AddItem(AbilityTagIcon);
 }
 
-function RemoveAbilityTag(const int Index)
+final function RemoveAbilityTag(const int Index)
 {
-	local CPS_UIArmory_PromotionHeroColumn	Column;
-	local CPS_UIArmory_PromotionHero		PromotionScreen;
-	local array<AbilityTagStruct>			AbilityTags;
-	local AbilityTagStruct					AbilityTag;
-	local name								AbilityName;
-	local UnitValue							UV;
-	local XComGameState_Unit				UnitState;
-	local XComGameState						NewGameState;
+	local array<AbilityTagStruct>	AbilityTags;
+	local AbilityTagStruct			AbilityTag;
+	local UnitValue					UV;
+	local XComGameState_Unit		UnitState;
+	local XComGameState				NewGameState;
+	local SoldierRankAbilities		AbilityTree;
+	local SoldierClassAbilityType	AbilityType;
 	local int i;
 
-	PromotionScreen = CPS_UIArmory_PromotionHero(Screen);
-	if (PromotionScreen == none)
-		return;
-
-	// Exit early if there's no tag for this ability.
-	UnitState = PromotionScreen.GetUnit();
-	if (!UnitState.GetUnitValue(name(AbilityTagPrefix $ AbilityNames[Index]), UV))
-	{
-		return;
-	}
-
 	// 1. Remove the tag.
+	UnitState = GetUnit();
 	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("Tag Ability For Unit");
 	UnitState = XComGameState_Unit(NewGameState.ModifyStateObject(UnitState.Class, UnitState.ObjectID));
 	UnitState.ClearUnitValue(name(AbilityTagPrefix $ AbilityNames[Index]));
 	
 	// 2. Build an array of all other ability tags currently present on the unit.
-	for (i = 0; i < PromotionScreen.Columns.Length; i++)
+	foreach UnitState.AbilityTree(AbilityTree)
 	{
-		Column = CPS_UIArmory_PromotionHeroColumn(PromotionScreen.Columns[i]);
-		if (Column == none)
-			return;
-					
-		foreach Column.AbilityNames(AbilityName)
+		foreach AbilityTree.Abilities(AbilityType)
 		{
-			if (UnitState.GetUnitValue(name(AbilityTagPrefix $ AbilityName), UV))
+			if (UnitState.GetUnitValue(name(AbilityTagPrefix $ AbilityType.AbilityName), UV))
 			{
-				AbilityTag.AbilityName = AbilityName;
-				AbilityTag.iTag = UV.fValue;
+				AbilityTag.AbilityName = AbilityType.AbilityName;
+				AbilityTag.iTagText = UV.fValue;
 				AbilityTags.AddItem(AbilityTag);
 			}
 		}
@@ -447,13 +400,13 @@ function RemoveAbilityTag(const int Index)
 	// 4. Reset tags to start from 1 and increase by one.
 	for (i = 0; i < AbilityTags.Length; i++)
 	{
-		AbilityTags[i].iTag = i + 1;
+		AbilityTags[i].iTagText = i + 1;
 	}
 
 	// 5. Set new tag values.
 	foreach AbilityTags(AbilityTag)
 	{
-		UnitState.SetUnitFloatValue(name(AbilityTagPrefix $ AbilityTag.AbilityName), AbilityTag.iTag, eCleanup_Never);
+		UnitState.SetUnitFloatValue(name(AbilityTagPrefix $ AbilityTag.AbilityName), AbilityTag.iTagText, eCleanup_Never);
 	}
 	`GAMERULES.SubmitGameState(NewGameState);
 
@@ -461,67 +414,64 @@ function RemoveAbilityTag(const int Index)
 	AS_HideAbilityTag(Index);
 
 	// 7. Update UI text of all tags to account for new values.
-	for (i = 0; i < PromotionScreen.Columns.Length; i++)
-	{
-		Column = CPS_UIArmory_PromotionHeroColumn(PromotionScreen.Columns[i]);		
-		Column.UpdateAllTagTexts();
-	}	
+	UpdateAllTagTexts();
 }
 
-function AS_HideAbilityTag(int Index)
+private function AS_HideAbilityTag(int Index)
 {
-	local UIImage TagBackgroundIcon;
+	local CPS_UIAbilityTag AbilityTagIcon;
 
-	foreach TagBackgroundIcons(TagBackgroundIcon)
+	foreach AbilityTagIcons(AbilityTagIcon)
 	{
-		if (TagBackgroundIcon.MCName == name("Tag_" $ Index))
+		if (AbilityTagIcon.iRankIndex == Index)
 		{
-			TagBackgroundIcon.Hide();
+			AbilityTagIcon.Hide();
+			return;
 		}
 	}
 }
 
-simulated function int SortAbilityTags(AbilityTagStruct TagA, AbilityTagStruct TagB)
+private simulated function int SortAbilityTags(AbilityTagStruct TagA, AbilityTagStruct TagB)
 {
-	if (TagA.iTag < TagB.iTag)
+	if (TagA.iTagText < TagB.iTagText)
 		return 1;
 
-	if (TagA.iTag > TagB.iTag)
+	if (TagA.iTagText > TagB.iTagText)
 		return -1;
 
 	return 0;
 }
 
-function UpdateAllTagTexts()
+private function UpdateAllTagTexts()
 {
-	local UIText	TagText;
-	local int		iTag;
-	local int		i;
-	local int		TagIdx;
+	local CPS_UIArmory_PromotionHero		PromotionScreen;
+	local CPS_UIArmory_PromotionHeroColumn	Column;
+	local CPS_UIAbilityTag					AbilityTagIcon;
+	local int								iTagText;
+	local int i;
+	
+	PromotionScreen = CPS_UIArmory_PromotionHero(Screen);
 
-	for (i = 0; i < AbilityNames.Length; i++)
+	for (i = 0; i < PromotionScreen.Columns.Length; i++)
 	{
-		iTag = GetAbilityTag(AbilityNames[i]);
-		if (iTag > 0)
+		Column = CPS_UIArmory_PromotionHeroColumn(PromotionScreen.Columns[i]);
+		foreach Column.AbilityTagIcons(AbilityTagIcon)
 		{
-			foreach TagTexts(TagText, TagIdx)
+			iTagText = GetAbilityTagText(AbilityTagIcon.AbilityName);
+			if (iTagText != -1)
 			{
-				if (TagText.MCName == name("Tag_" $ i))
-				{
-					SetTagText(TagText, string(iTag), TagBackgroundIcons[TagIdx]);
-					break;
-				}
+				AbilityTagIcon.MaybeSetTagNumberText(iTagText);
 			}
 		}
 	}
 }
 
-function int GetAbilityTag(const name TemplateName)
+private function int GetAbilityTagText(const name TemplateName)
 {
 	local XComGameState_Unit UnitState;
 	local UnitValue UV;
 
-	UnitState = UIArmory_PromotionHero(Screen).GetUnit();
+	UnitState = GetUnit();
 
 	if (UnitState.GetUnitValue(name(AbilityTagPrefix $ TemplateName), UV))
 	{
@@ -531,16 +481,8 @@ function int GetAbilityTag(const name TemplateName)
 	return -1;
 }
 
-function SetTagText(out UIText TagText, string strText, UIPanel BackgroundIconParentPanel)
+private function XComGameState_Unit GetUnit()
 {
-	if (Len(strText) > 1)
-	{
-		// Smaller font size for double digits
-		TagText.SetCenteredText(class'UIUtilities_Text'.static.GetColoredText(strText, eUIState_Normal, 20), BackgroundIconParentPanel);
-	}
-	else
-	{
-		TagText.SetCenteredText(class'UIUtilities_Text'.static.GetColoredText(strText, eUIState_Normal, 24), BackgroundIconParentPanel);
-	}
+	return UIArmory_PromotionHero(Screen).GetUnit();
 }
 // End Issue #53

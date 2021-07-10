@@ -126,6 +126,9 @@
     <Content Include="Src\NewPromotionScreenbyDefault\Classes\X2DownloadableContentInfo_NewPromotionScreenbyDefault.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\X2WOTCCommunityPromotionScreen\Classes\CPS_UIAbilityTag.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\X2WOTCCommunityPromotionScreen\Classes\CPS_UIArmory_PromotionHero.uc">
       <SubType>Content</SubType>
     </Content>
