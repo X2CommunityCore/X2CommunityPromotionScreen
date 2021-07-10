@@ -24,6 +24,9 @@
     <Content Include="Config\XComPromotionUIMod.ini">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Config\XComrobojumperSquadSelect.ini">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Config\XComX2WOTCCommunityPromotionScreen_DEFAULT.ini">
       <SubType>Content</SubType>
     </Content>
