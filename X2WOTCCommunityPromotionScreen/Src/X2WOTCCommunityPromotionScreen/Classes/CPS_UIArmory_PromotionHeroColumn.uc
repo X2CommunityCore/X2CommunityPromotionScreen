@@ -59,7 +59,7 @@ function SelectAbility(int idx)
 	}
 	else 
 	{
-		// Start Issue #53 - 
+		// Start Issue #53
 		// When player clicks on a visible ability that has not been purchased yet, toggle its ability tag.
 		if (!IsAbilityIconLocked(idx) && `GETMCMVAR(ABILITY_TREE_PLANNER_MODE) > 0) 
 		{
@@ -73,8 +73,10 @@ function SelectAbility(int idx)
 		{
 			PromotionScreen.ConfirmAbilitySelection(Rank, idx);
 		}
-		else if (!PromotionScreen.IsAbilityLocked(Rank))
+		else if (!PromotionScreen.IsAbilityLocked(Rank) && `GETMCMVAR(ABILITY_TREE_PLANNER_MODE) == 0) // Issue #53 - display the popup only if tagging is disabled
 		{
+			// This will display the ability info pop-up when the player directly clicks on an ability
+			// located on a rank already reached by the soldier. 
 			OnInfoButtonMouseEvent(InfoButtons[idx], class'UIUtilities_Input'.const.FXS_L_MOUSE_UP);
 		}
 		else if (!bSoundPlayed)
@@ -316,11 +318,19 @@ function AS_DrawAbilityTag(int Index, int iTag = -1)
 	local int		TagIdx;
 
 	// If called without a tag specified, try to get it from the unit.
+
+	// iTag is used in two ways:
+	// 1. Helps determine whether this ability is tagged or now.
+	// 2. If the ability is tagged, iTag stores the order number that should be displayed on the tag icon (only in "advanced" mode).
 	if (iTag == -1)
 	{
 		iTag = GetAbilityTag(AbilityNames[Index]);
 		if (iTag == -1)
 		{
+			// Hide the tag icon if it exists when it's not supposed to,
+			// can occur while scrolling.
+			AS_HideAbilityTag(Index);
+
 			// Exit early if the tag doesn't exist.
 			return;
 		}
