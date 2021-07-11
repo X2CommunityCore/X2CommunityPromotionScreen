@@ -107,6 +107,28 @@ simulated function SelectPrevIcon()
 	Movie.Pres.PlayUISound(eSUISound_MenuSelect); //bsg-crobinson (5.11.17): Add sound
 }
 
+// Start Issue #57
+//
+// Add some handling for left-stick press so that it will always pop
+// up the ability information panel if the ability is not hidden.
+simulated function bool OnUnrealCommand(int cmd, int arg)
+{
+	local bool bHandled;
+
+	switch (cmd)
+	{
+		case class'UIUtilities_Input'.const.FXS_BUTTON_L3:
+			if (!IsAbilityIconLocked(m_iPanelIndex + CPS_UIArmory_PromotionHero(Screen).Position))
+			{
+				OnAbilityInfoClicked(InfoButtons[m_iPanelIndex]);
+				bHandled = true;
+			}
+			break;
+	}
+
+	return bHandled || super.OnUnrealCommand(cmd, arg);
+}
+// End Issue #57
 
 // Instruct the Screen to Scroll the selection.
 // Returns false if the column needs to wrap around, true else
