@@ -1,10 +1,11 @@
 [CPS_UIArmory_PromotionHero]
 m_strMutuallyExclusive = "Mutually exclusive with:"
-ReasonNotEnoughAP = "Not enough Ability Points"
-ReasonLacksPrerequisites = "Prerequisite ability required"
-ReasonNoClassPerkPurchased = "Pick soldier class ability at this rank first"
-ReasonNoTrainingCenter = "Training Center facility required"
-ReasonNotHighEnoughRank = "Higher rank required"
+
+arr_strLocReasonsLocked[0] = "Prerequisite ability required."
+arr_strLocReasonsLocked[1] = "Pick soldier class ability at this rank first."
+arr_strLocReasonsLocked[2] = "Training Center facility required."
+arr_strLocReasonsLocked[3] = "Not enough Ability Points."
+arr_strLocReasonsLocked[4] = "Higher rank required."
 
 [UISL_CPS]
 strDisablePopup = "DISABLE THIS POP-UP"
