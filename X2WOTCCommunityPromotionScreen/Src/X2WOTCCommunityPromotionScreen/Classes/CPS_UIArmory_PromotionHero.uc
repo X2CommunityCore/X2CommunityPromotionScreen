@@ -12,11 +12,15 @@ var UIScrollbar	Scrollbar;
 var config bool bLog;
 
 // Vars for Issue #7
-var localized string ReasonLacksPrerequisites;
-var localized string ReasonNoClassPerkPurchased;
-var localized string ReasonNoTrainingCenter;
-var localized string ReasonNotEnoughAP;
-var localized string ReasonNotHighEnoughRank;
+enum EReasonLocked
+{
+	eReason_LacksPrerequisites,
+	eReason_NoClassPerkPurchased,
+	eReason_NoTrainingCenter,
+	eReason_NotEnoughAP,
+	eReason_NotHighEnoughRank
+};
+var localized array<string> arr_strLocReasonsLocked;
 // End Issue #7
 
 // Position is the number by which we offset all ability indices.
@@ -49,7 +53,7 @@ struct CPSAbilityMetaInfo
 	var bool bUnitHasPurchasedClassPerkAtRank;
 	var bool bUnitMeetsRankRequirement;
 	var bool bUnitCanSpendAP;
-	var bool bPromotionFreeUnlock;
+	var bool bAsResistanceHero;
 };
 
 `include(X2WOTCCommunityPromotionScreen\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
@@ -817,6 +821,7 @@ function bool CanPurchaseAbilityEx(int Rank, int Branch, name AbilityName, out s
 	local XComGameState_Unit UnitState;
 	local CPSAbilityMetaInfo MetaInfo;
 	local bool bCanPurchaseAbility;
+	local EReasonLocked iReasonLocked;
 	
 	UnitState = GetUnit();
 
@@ -827,38 +832,38 @@ function bool CanPurchaseAbilityEx(int Rank, int Branch, name AbilityName, out s
 	if (!MetaInfo.bUnitMeetsRankRequirement)
 	{
 		bCanPurchaseAbility = false;
-		strLocReasonLocked = ReasonNotHighEnoughRank;
+		iReasonLocked = eReason_NotHighEnoughRank;
 	} 
-	else if (MetaInfo.bUnitHasPurchasedClassPerkAtRank && !MetaInfo.bUnitCanSpendAP && !bAsResistanceHero)
+	else if (MetaInfo.bUnitHasPurchasedClassPerkAtRank && !MetaInfo.bUnitCanSpendAP && !MetaInfo.bAsResistanceHero)
 	{	
 		// Don't allow non-hero units to purchase additional abilities with AP without a training center.
 		bCanPurchaseAbility = false;
-		strLocReasonLocked = ReasonNoTrainingCenter;
+		iReasonLocked = eReason_NoTrainingCenter;
 	}
-	else if (!MetaInfo.bClassAbility && !MetaInfo.bUnitCanSpendAP && !bAsResistanceHero)
+	else if (!MetaInfo.bClassAbility && !MetaInfo.bUnitCanSpendAP && !MetaInfo.bAsResistanceHero)
 	{	
 		// Don't allow non-hero units to purchase abilities on the "XCOM" perk row without a training center.
 		bCanPurchaseAbility = false;
-		strLocReasonLocked = ReasonNoTrainingCenter;
+		iReasonLocked = eReason_NoTrainingCenter;
 	}
-	else if (!MetaInfo.bClassAbility && MetaInfo.bUnitCanSpendAP && !MetaInfo.bUnitHasPurchasedClassPerkAtRank && !bAsResistanceHero)
+	else if (!MetaInfo.bClassAbility && MetaInfo.bUnitCanSpendAP && !MetaInfo.bUnitHasPurchasedClassPerkAtRank && !MetaInfo.bAsResistanceHero)
 	{
 		// Don't allow non hero units to purchase abilities on the "XCOM" perk row before getting a soldier class perk on this rank.
 		bCanPurchaseAbility = false;
-		strLocReasonLocked = ReasonNoClassPerkPurchased;
+		iReasonLocked = eReason_NoClassPerkPurchased;
 	}
 	else if (!MetaInfo.bUnitMeetsAbilityPrerequisites)
 	{
 		bCanPurchaseAbility = false;
-		strLocReasonLocked = ReasonLacksPrerequisites;
+		iReasonLocked = eReason_LacksPrerequisites;
 	}
 	else if (!CanAffordAbility(Rank, Branch))
 	{
 		bCanPurchaseAbility = false;
-		strLocReasonLocked = ReasonNotEnoughAP;
+		iReasonLocked = eReason_NotEnoughAP;
 	}	
 
-	return TriggerOverrideCanPurchaseAbility(MetaInfo, UnitState, bCanPurchaseAbility, strLocReasonLocked);
+	return TriggerOverrideCanPurchaseAbility(MetaInfo, UnitState, bCanPurchaseAbility, iReasonLocked, strLocReasonLocked);
 }
 
 private function TriggerOverrideCanPurchaseAbilityProperties(out CPSAbilityMetaInfo MetaInfo, XComGameState_Unit UnitState)
@@ -884,7 +889,8 @@ private function TriggerOverrideCanPurchaseAbilityProperties(out CPSAbilityMetaI
 	/// 3. Unlocking non-class perks requires Training Center (!bClassAbility && bCanSpendAP).
 	/// Keep in mind the Training Center requirement can be disabled by mod users in CPS's ModConfigMenu.
 	///
-	/// Changes done to these properties by listeners will apply only for this ability and this soldier.
+	/// Changes done to these properties by listeners will apply only for this ability and this soldier, 
+	/// including `bAsResistanceHero`.
 	/// CPS's decision based on these properties can still be overridden by the 'CPS_OverrideCanPurchaseAbility' event later.
 	///
 	///```event
@@ -892,15 +898,14 @@ private function TriggerOverrideCanPurchaseAbilityProperties(out CPSAbilityMetaI
 	/// EventData: [in name AbilityTemplateName,
 	///		in int iRank,
 	///		in int iRow,
-	///		in bool bPowerfulAbility,
-	///		in bool bColonelRankAbility,
+	///		inout bool bPowerfulAbility,
+	///		inout bool bColonelRankAbility,
 	///		inout bool bClassAbility,
 	///		inout bool bUnitMeetsAbilityPrerequisites,
 	///		inout bool bUnitHasPurchasedClassPerkAtRank,
 	///		inout bool bUnitMeetsRankRequirement,
 	///		inout bool bUnitCanSpendAP,
-	///		in bool bPromotionFreeUnlock,
-	///		in bool bAsResistanceHero,
+	///		inout bool bAsResistanceHero,
 	///		in int AbilitiesPerRank],
 	/// EventSource: XComGameState_Unit (UnitState),
 	/// NewGameState: none
@@ -915,7 +920,7 @@ private function TriggerOverrideCanPurchaseAbilityProperties(out CPSAbilityMetaI
 	UpdateAbilityMetaInfoFromTuple(MetaInfo, Tuple);
 }
 
-private function bool TriggerOverrideCanPurchaseAbility(CPSAbilityMetaInfo MetaInfo, XComGameState_Unit UnitState, const bool bCanPurchaseAbility, out string strLocReasonLocked)
+private function bool TriggerOverrideCanPurchaseAbility(CPSAbilityMetaInfo MetaInfo, XComGameState_Unit UnitState, const bool bCanPurchaseAbility, const EReasonLocked iReasonLocked, out string strLocReasonLocked)
 {
 	local XComLWTuple Tuple;
 
@@ -926,6 +931,8 @@ private function bool TriggerOverrideCanPurchaseAbility(CPSAbilityMetaInfo MetaI
 	/// - If a mod wants to disallow unlocking this ability, then setting `bCanPurchaseAbility = false;` is enough,
 	///	though ideally the mod should also provide a `strLocReasonLocked` string that will be displayed in the UI
 	/// as a reason why this ability cannot be unlocked at this time.
+	/// Alternatively, if the mod wants to use one of the standard CPS reasons,
+	/// they can put the specific reason's array index into `eReasonLocked`.
 	///
 	///```event
 	/// EventID: CPS_OverrideCanPurchaseAbility,
@@ -939,12 +946,12 @@ private function bool TriggerOverrideCanPurchaseAbility(CPSAbilityMetaInfo MetaI
 	///		in bool bUnitHasPurchasedClassPerkAtRank,
 	///		in bool bUnitMeetsRankRequirement,
 	///		in bool bUnitCanSpendAP,
-	///		in bool bPromotionFreeUnlock,
 	///		in bool bAsResistanceHero,
 	///		in int AbilitiesPerRank,
 	///		in bool bUnitCanAffordAP,
 	///		inout bool bCanPurchaseAbility,
-	///		inout string strLocReasonLocked],
+	///		inout int eReasonLocked,
+	///		out string strLocReasonLocked],
 	/// EventSource: XComGameState_Unit (UnitState),
 	/// NewGameState: none
 	///```	
@@ -953,22 +960,31 @@ private function bool TriggerOverrideCanPurchaseAbility(CPSAbilityMetaInfo MetaI
 	
 	FillTupleFromAbilityMetaInfo(MetaInfo, Tuple);
 
-	Tuple.Data.Add(3);
+	Tuple.Data.Add(4);
+	Tuple.Data[12].kind = XComLWTVBool;
+	Tuple.Data[12].b = CanAffordAbility(MetaInfo.iRank, MetaInfo.iRow);
 	Tuple.Data[13].kind = XComLWTVBool;
-	Tuple.Data[13].b = CanAffordAbility(MetaInfo.iRank, MetaInfo.iRow);
-	Tuple.Data[14].kind = XComLWTVBool;
-	Tuple.Data[14].b = bCanPurchaseAbility;
+	Tuple.Data[13].b = bCanPurchaseAbility;
+	Tuple.Data[14].kind = XComLWTVInt;
+	Tuple.Data[14].i = iReasonLocked;
 	Tuple.Data[15].kind = XComLWTVString;
-	Tuple.Data[15].s = strLocReasonLocked;
+	Tuple.Data[15].s = "";
 
 	`XEVENTMGR.TriggerEvent(Tuple.Id, Tuple, UnitState);
 
-	if (Tuple.Data[14].b) // bCanPurchaseAbility
+	if (Tuple.Data[13].b) // bCanPurchaseAbility
 	{
-		strLocReasonLocked = "";
 		return true;
 	}
-	strLocReasonLocked = Tuple.Data[15].s;
+	if (Tuple.Data[15].s != "")
+	{	
+		strLocReasonLocked = Tuple.Data[15].s;
+	}
+	else if (Tuple.Data[14].i >= 0 && Tuple.Data[14].i <= eReason_MAX)
+	{
+		strLocReasonLocked = arr_strLocReasonsLocked[Tuple.Data[14].i]; // iReasonLocked
+	}
+	
 	return false;
 }
 
@@ -992,13 +1008,13 @@ function int GetAbilityPointCost(int Rank, int Branch)
 	}
 	else 
 	{
-		if (MetaInfo.bPowerfulAbility && (bAsResistanceHero || !MetaInfo.bClassAbility))
+		if (MetaInfo.bPowerfulAbility && (MetaInfo.bAsResistanceHero || !MetaInfo.bClassAbility))
 		{
 			// Ability Cost is increased for "powerful" abilities in XCOM row of regular soldiers, 
 			// or anywhere in the Faction Heroes' ability tree.	
 			iAbilityCost = class'X2StrategyGameRulesetDataStructures'.default.PowerfulAbilityPointCost;
 		}
-		else if (bAsResistanceHero && MetaInfo.bColonelRankAbility && !bHasBrigadierRank)
+		else if (MetaInfo.bAsResistanceHero && MetaInfo.bColonelRankAbility && !bHasBrigadierRank)
 		{
 			// Colonel+ rank abilities of Faction Heroes have increased cost as well, 
 			// unless the class has a Brigadier Rank, 
@@ -1041,10 +1057,9 @@ private function TriggerOverrideGetAbilityPointCostProperties(out CPSAbilityMeta
 	/// 2. All "powerful" abilities use the "powerful" cost (bPowerfulAbility).
 	/// 3. Colonel Rank abilities use the "powerful" cost (bColonelRankAbility)
 	///
-	/// Changes done to these properties by listeners will apply only for this ability and this soldier.
+	/// Changes done to these properties by listeners will apply only for this ability and this soldier, 
+	/// including `bAsResistanceHero`.
 	/// CPS's decision based on these properties can still be overridden by the 'CPS_OverrideAbilityPointCost' event later.
-	///
-	/// Note: `bPromotionFreeUnlock` will be updated automatically based on values of `bAsResistanceHero`, `bClassAbility` and `bUnitHasPurchasedClassPerkAtRank`.
 	///
 	///```event
 	/// EventID: CPS_OverrideGetAbilityPointCostProperties,
@@ -1054,12 +1069,11 @@ private function TriggerOverrideGetAbilityPointCostProperties(out CPSAbilityMeta
 	///		inout bool bPowerfulAbility,
 	///		inout bool bColonelRankAbility,
 	///		inout bool bClassAbility,
-	///		in bool bUnitMeetsAbilityPrerequisites,
+	///		inout bool bUnitMeetsAbilityPrerequisites,
 	///		inout bool bUnitHasPurchasedClassPerkAtRank,
-	///		in bool bUnitMeetsRankRequirement,
-	///		in bool bUnitCanSpendAP,
-	///		in bool bPromotionFreeUnlock,
-	///		in bool bAsResistanceHero,
+	///		inout bool bUnitMeetsRankRequirement,
+	///		inout bool bUnitCanSpendAP,
+	///		inout bool bAsResistanceHero,
 	///		in int AbilitiesPerRank],
 	/// EventSource: XComGameState_Unit (UnitState),
 	/// NewGameState: none
@@ -1085,16 +1099,10 @@ private function int TriggerOverrideAbilityPointCost(out CPSAbilityMetaInfo Meta
 	/// Community Promotion Screen always calculates proper Ability Point Cost for each ability,
 	/// which is passed in the Tuple as `iAbilityPointCost`. However, abilities unlocked 
 	/// by regular soldiers when they are first promoted to a new rank 
-	/// normally do not cost any Ability Points, which is relayed in the Tuple as `bPromotionFreeUnlock`.
+	/// normally do not cost any Ability Points: `(!bAsResistanceHero && bClassAbility && !bUnitHasPurchasedClassPerkAtRank)`
 	///
-	/// If `bPromotionFreeUnlock` is `true`, the Ability Point Cost written in `iAbilityCost`
+	/// If the above statement evaluates to `true`, the Ability Point Cost written in `iAbilityCost`
 	/// will be ignored and the ability will be free to unlock.
-	/// If `bPromotionFreeUnlock` is `false`, then the Ability Point Cost written in `iAbilityCost`
-	/// will be applied.
-	///
-	/// This is done so that mods can easily make soldier class abilities cost their normal
-	/// amount of Ability Points by setting `bPromotionFreeUnlock` to `false`, 
-	/// even when they would have been free by vanilla logic.
 	///
 	/// ```event
 	/// EventID: CPS_OverrideAbilityPointCost,
@@ -1108,7 +1116,6 @@ private function int TriggerOverrideAbilityPointCost(out CPSAbilityMetaInfo Meta
 	///		in bool bUnitHasPurchasedClassPerkAtRank,
 	///		in bool bUnitMeetsRankRequirement,
 	///		in bool bUnitCanSpendAP,
-	///		in bool bPromotionFreeUnlock,
 	///		in bool bAsResistanceHero,
 	///		in int AbilitiesPerRank,
 	///		inout int iAbilityPointCost],
@@ -1121,19 +1128,22 @@ private function int TriggerOverrideAbilityPointCost(out CPSAbilityMetaInfo Meta
 	FillTupleFromAbilityMetaInfo(MetaInfo, Tuple);
 
 	Tuple.Data.Add(1);
-	Tuple.Data[13].kind = XComLWTVInt;
-	Tuple.Data[13].i = iAbilityPointCost;
+	Tuple.Data[12].kind = XComLWTVInt;
+	Tuple.Data[12].i = iAbilityPointCost;
 
 	`XEVENTMGR.TriggerEvent(Tuple.Id, Tuple, UnitState);
 
 	UpdateAbilityMetaInfoFromTuple(MetaInfo, Tuple);
 
+	//`LOG(GetFuncName() @ UnitState.GetFullName(),, 'CPS_TEST');
+	//`LOG(AbilityMetaInfo_ToString(MetaInfo),, 'CPS_TEST');
+
 	// Ability Point cost should not be applied if this ability is unlocked by a regular soldier for free on their promotion.
-	if (MetaInfo.bPromotionFreeUnlock)
+	if (!MetaInfo.bAsResistanceHero && MetaInfo.bClassAbility && !MetaInfo.bUnitHasPurchasedClassPerkAtRank)
 	{
 		return 0;
 	}
-	return Tuple.Data[13].i; // iAbilityPointCost
+	return Tuple.Data[12].i; // iAbilityPointCost
 }
 
 final function int GetDefaultAbilityPointCostForRank(const int Rank)
@@ -1584,13 +1594,12 @@ private function FillAbilityMetaInfo(out CPSAbilityMetaInfo MetaInfo, XComGameSt
 	// Whether Training Center is built, or if the CPS is configured to disregard Training Center requirement.
 	MetaInfo.bUnitCanSpendAP = bCanSpendAP;
 
-	// If this is a base game soldier with a promotion available, ability doesn't cost AP to unlock.
-	MetaInfo.bPromotionFreeUnlock = !bAsResistanceHero && MetaInfo.bClassAbility && !MetaInfo.bUnitHasPurchasedClassPerkAtRank;
+	MetaInfo.bAsResistanceHero = bAsResistanceHero;
 }
 
 private function FillTupleFromAbilityMetaInfo(const CPSAbilityMetaInfo MetaInfo, XComLWTuple Tuple)
 {
-	Tuple.Data.Add(13);
+	Tuple.Data.Add(12);
 	Tuple.Data[0].kind = XComLWTVName;
 	Tuple.Data[0].n = MetaInfo.TemplateName;
 	Tuple.Data[1].kind = XComLWTVInt;
@@ -1612,11 +1621,9 @@ private function FillTupleFromAbilityMetaInfo(const CPSAbilityMetaInfo MetaInfo,
 	Tuple.Data[9].kind = XComLWTVBool;
 	Tuple.Data[9].b = MetaInfo.bUnitCanSpendAP;
 	Tuple.Data[10].kind = XComLWTVBool;
-	Tuple.Data[10].b = MetaInfo.bPromotionFreeUnlock;
-	Tuple.Data[11].kind = XComLWTVBool;
-	Tuple.Data[11].b = bAsResistanceHero;
-	Tuple.Data[12].kind = XComLWTVInt;
-	Tuple.Data[12].i = AbilitiesPerRank;
+	Tuple.Data[10].b = bAsResistanceHero;
+	Tuple.Data[11].kind = XComLWTVInt;
+	Tuple.Data[11].i = AbilitiesPerRank;
 }
 
 private function UpdateAbilityMetaInfoFromTuple(out CPSAbilityMetaInfo MetaInfo, const XComLWTuple Tuple)
@@ -1628,7 +1635,15 @@ private function UpdateAbilityMetaInfoFromTuple(out CPSAbilityMetaInfo MetaInfo,
 	MetaInfo.bUnitHasPurchasedClassPerkAtRank = Tuple.Data[7].b;
 	MetaInfo.bUnitMeetsRankRequirement = Tuple.Data[8].b;
 	MetaInfo.bUnitCanSpendAP = Tuple.Data[9].b;
-	MetaInfo.bPromotionFreeUnlock = !bAsResistanceHero && MetaInfo.bClassAbility && !MetaInfo.bUnitHasPurchasedClassPerkAtRank;
+	MetaInfo.bAsResistanceHero = Tuple.Data[10].b;
+}
+
+final static function string AbilityMetaInfo_ToString(const CPSAbilityMetaInfo MetaInfo)
+{
+	return `showvar(MetaInfo.TemplateName) @ `showvar(MetaInfo.iRank) @ `showvar(MetaInfo.iRow) @ `showvar(MetaInfo.bPowerfulAbility) @
+			`showvar(MetaInfo.bColonelRankAbility) @ `showvar(MetaInfo.bClassAbility) @ 
+			`showvar(MetaInfo.bUnitMeetsAbilityPrerequisites) @ `showvar(MetaInfo.bUnitHasPurchasedClassPerkAtRank) @ 
+			`showvar(MetaInfo.bUnitMeetsRankRequirement) @ `showvar(MetaInfo.bUnitCanSpendAP) @ `showvar(MetaInfo.bAsResistanceHero);
 }
 
 function ResizeScreenForBrigadierRank()
