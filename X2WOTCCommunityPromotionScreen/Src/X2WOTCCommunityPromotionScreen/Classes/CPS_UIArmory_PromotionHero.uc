@@ -36,6 +36,7 @@ var X2SoldierClassTemplate	ClassTemplate;
 var bool					bCanSpendAP;
 // End Issue #24
 
+
 struct CPSAbilityMetaInfo
 {
 	var name TemplateName;
@@ -1381,6 +1382,9 @@ simulated function ConfirmAbilityCallbackEx(Name Action)
 
 			Header.PopulateData();
 			PopulateData();
+
+			// Issue #53 - Remove ability's tag after it was purchased.
+			CPS_UIArmory_PromotionHeroColumn(Columns[PendingRank]).RemoveAbilityTag(PendingBranch);
 
 			// Start Issue #37
 			// KDM : After an ability has been selected and accepted, all of the

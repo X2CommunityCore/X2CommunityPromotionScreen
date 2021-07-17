@@ -12,6 +12,7 @@ var localized string GroupHeader;
 `MCM_API_AutoCheckBoxVars(DISABLE_TRAINING_CENTER_REQUIREMENT);
 `MCM_API_AutoCheckBoxVars(DISABLE_NEWCLASS_POPUPS);
 `MCM_API_AutoCheckBoxVars(DISABLE_COMINT_POPUPS);
+`MCM_API_AutoIndexDropdownVars(ABILITY_TREE_PLANNER_MODE);
 
 `include(X2WOTCCommunityPromotionScreen\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
 
@@ -19,6 +20,7 @@ var localized string GroupHeader;
 `MCM_API_AutoCheckBoxFns(DISABLE_TRAINING_CENTER_REQUIREMENT, 1);
 `MCM_API_AutoCheckBoxFns(DISABLE_NEWCLASS_POPUPS, 1);
 `MCM_API_AutoCheckBoxFns(DISABLE_COMINT_POPUPS, 1);
+`MCM_API_AutoIndexDropdownFns(ABILITY_TREE_PLANNER_MODE, 2);
 
 event OnInit(UIScreen Screen)
 {
@@ -38,7 +40,11 @@ simulated function ClientModCallback(MCM_API_Instance ConfigAPI, int GameMode)
 	Page.EnableResetButton(ResetButtonClicked);
 
 	Group = Page.AddGroup('Group', GroupHeader);
-	`MCM_API_AutoAddCheckBox(Group, SHOW_UNREACHED_PERKS);
+	`MCM_API_AutoAddCheckBox(Group, SHOW_UNREACHED_PERKS, /* Issue #53 */ SHOW_UNREACHED_PERKS_ChangeHandler);
+
+	// Issue #53
+	Group.AddDropdown('ABILITY_TREE_PLANNER_MODE', ABILITY_TREE_PLANNER_MODE_Label, ABILITY_TREE_PLANNER_MODE_Tip, ABILITY_TREE_PLANNER_MODE_Strings, ABILITY_TREE_PLANNER_MODE_Strings[ABILITY_TREE_PLANNER_MODE], ABILITY_TREE_PLANNER_MODE_SaveHandler).SetEditable(SHOW_UNREACHED_PERKS);
+	
 	`MCM_API_AutoAddCheckBox(Group, DISABLE_TRAINING_CENTER_REQUIREMENT);	
 	`MCM_API_AutoAddCheckBox(Group, DISABLE_NEWCLASS_POPUPS);	
 	`MCM_API_AutoAddCheckBox(Group, DISABLE_COMINT_POPUPS);	
@@ -46,12 +52,22 @@ simulated function ClientModCallback(MCM_API_Instance ConfigAPI, int GameMode)
 	Page.ShowSettings();
 }
 
+// Start Issue #53
+simulated function SHOW_UNREACHED_PERKS_ChangeHandler(MCM_API_Setting _Setting, bool _SettingValue)
+{
+	SHOW_UNREACHED_PERKS = _SettingValue;
+	// Lock the ABILITY_TREE_PLANNER_MODE if SHOW_UNREACHED_PERKS is disabled.
+	_Setting.GetParentGroup().GetSettingByName('ABILITY_TREE_PLANNER_MODE').SetEditable(SHOW_UNREACHED_PERKS);
+}
+// End Issue #53
+
 simulated function LoadSavedSettings()
 {
 	SHOW_UNREACHED_PERKS = `GETMCMVAR(SHOW_UNREACHED_PERKS);
 	DISABLE_TRAINING_CENTER_REQUIREMENT = `GETMCMVAR(DISABLE_TRAINING_CENTER_REQUIREMENT);
 	DISABLE_NEWCLASS_POPUPS = `GETMCMVAR(DISABLE_NEWCLASS_POPUPS);
 	DISABLE_COMINT_POPUPS = `GETMCMVAR(DISABLE_COMINT_POPUPS);
+	ABILITY_TREE_PLANNER_MODE = `GETMCMVAR(ABILITY_TREE_PLANNER_MODE);
 }
 
 simulated function ResetButtonClicked(MCM_API_SettingsPage Page)
@@ -60,10 +76,19 @@ simulated function ResetButtonClicked(MCM_API_SettingsPage Page)
 	`MCM_API_AutoReset(DISABLE_TRAINING_CENTER_REQUIREMENT);
 	`MCM_API_AutoReset(DISABLE_NEWCLASS_POPUPS);
 	`MCM_API_AutoReset(DISABLE_COMINT_POPUPS);
+	`MCM_API_AutoIndexReset(ABILITY_TREE_PLANNER_MODE);
 }
 
 simulated function SaveButtonClicked(MCM_API_SettingsPage Page)
 {
+	// Start Issue #53
+	// Disable the ABILITY_TREE_PLANNER_MODE if SHOW_UNREACHED_PERKS is disabled.
+	if (!SHOW_UNREACHED_PERKS)
+	{
+		ABILITY_TREE_PLANNER_MODE = 0;
+	}
+	// End Issue #53
+
 	VERSION_CFG = `MCM_CH_GetCompositeVersion();
 	SaveConfig();
 }
