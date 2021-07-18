@@ -37,4 +37,6 @@ If you encounter a bug or have a suggesten, feel free to open an Issue, or file 
 
 [h1]Credits[/h1]
 
+Thanks to [b]RustyDios[/b] for providing the mod preview image.
+
 Thank you for using the Community Promotion Screen. Our objective is to support all modmakers to be all they can be.
