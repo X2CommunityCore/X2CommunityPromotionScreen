@@ -1,5 +1,7 @@
 class X2DownloadableContentInfo_X2WOTCCommunityPromotionScreen extends X2DownloadableContentInfo;
 
+`include(X2WOTCCommunityPromotionScreen\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
+
 static event OnPostTemplatesCreated()
 {
 	// Issue #25
@@ -53,6 +55,9 @@ static function OnPreCreateTemplates()
 {
     // Issue #26
 	Neuter_NPSBD_UISL();
+
+	// Issue #62
+	Update_ViewLockedSkills_UISL();
 }
 
 // Start Issue #26
@@ -67,3 +72,30 @@ static final function Neuter_NPSBD_UISL()
     }
 }
 // End Issue #26
+
+// Start Issue #62
+/// This handles CPS' compatibility with View Locked Skills - Wotc
+/// https://steamcommunity.com/sharedfiles/filedetails/?id=1130817270
+/// When CPS is configured to show perks from unreached ranks via MCM, 
+/// View Locked Skills' UISL is neutered.
+/// The UISL is un-neutered if Show Unreached Perks is disabled.
+/// This allows both mods to coexist without stepping on each other's toes too much,
+/// even though View Locked Skills is mostly redundant with CPS.
+static final function Update_ViewLockedSkills_UISL()
+{
+	local UIScreenListener CDO;
+
+	CDO = UIScreenListener(class'XComEngine'.static.GetClassDefaultObjectByName('Main_ViewLockedSkillsWotc'));
+	if (CDO != none)
+	{	
+		if (`GETMCMVAR(SHOW_UNREACHED_PERKS))
+		{
+			CDO.ScreenClass = class'UIScreen_Dummy';
+		}
+		else if (CDO.ScreenClass == class'UIScreen_Dummy')
+		{
+			CDO.ScreenClass = none;
+		}
+	}
+}
+// End Issue #62

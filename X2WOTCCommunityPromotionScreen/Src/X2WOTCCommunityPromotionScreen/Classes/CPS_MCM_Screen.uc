@@ -91,6 +91,9 @@ simulated function SaveButtonClicked(MCM_API_SettingsPage Page)
 
 	VERSION_CFG = `MCM_CH_GetCompositeVersion();
 	SaveConfig();
+
+	// Issue #62
+	class'X2DownloadableContentInfo_X2WOTCCommunityPromotionScreen'.static.Update_ViewLockedSkills_UISL();
 }
 
 
