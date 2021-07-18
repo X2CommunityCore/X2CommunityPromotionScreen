@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Guid>e1d5210a-10ce-43dc-a1c8-0edce7d4c712</Guid>
     <Name>X2WOTCCommunityPromotionScreen</Name>
-    <Description>An improved replacement for [WOTC] New Promotion Screen By Default.</Description>
+    <Description>Community Promotion Screen is an expanded and improved version of the New Promotion Screen By Default. It replaces the standard soldier promotion screen with a modified version of the "Faction Hero" promotion screen that was added in War of the Chosen.</Description>
     <SteamPublishID>0</SteamPublishID>
     <AssemblyName>X2WOTCCommunityPromotionScreen</AssemblyName>
     <RootNamespace>X2WOTCCommunityPromotionScreen</RootNamespace>
