@@ -465,7 +465,8 @@ function bool UpdateAbilityIcons_Override(out CPS_UIArmory_PromotionHeroColumn C
 				
 				// Look ahead to the next rank and check to see if the current ability is a prereq for the next one
 				// If so, turn on the connection arrow between them
-				if (Column.Rank < (class'X2ExperienceConfig'.static.GetMaxRank() - 2) && Unit.GetRank() > (Column.Rank + 1))
+				//if (Column.Rank < (class'X2ExperienceConfig'.static.GetMaxRank() - 2) && Unit.GetRank() > (Column.Rank + 1))
+				if (Column.Rank < (Columns.Length - 2) && Unit.GetRank() > (Column.Rank + 1) || `GETMCMVAR(SHOW_UNREACHED_PERKS)) // Issue #61 - always connect abilities if "Show unreached perks" is enabled.
 				{
 					bConnectToNextAbility = false;
 					NextRankTree = Unit.GetRankAbilities(Column.Rank + 1);
