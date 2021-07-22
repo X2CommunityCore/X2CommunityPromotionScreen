@@ -6,3 +6,35 @@ strPopupText = "\nПривет, это ваш мод - <font color='#005AB5'>[WO
 SparkAbilityTreeTitles[0]="Битва будущего"
 SparkAbilityTreeTitles[1]="Боевая машина"
 SparkAbilityTreeTitles[2]="XCOM"
+
+[CPS_UIArmory_PromotionHero]
+m_strMutuallyExclusive = "Взаимно исключаемо с:"
+
+arr_strLocReasonsLocked[0] = "Требуется предварительная способность."
+arr_strLocReasonsLocked[1] = "Сперва надо выбрать классовую способность."
+arr_strLocReasonsLocked[2] = "Необходимо построить центр подготовки."
+arr_strLocReasonsLocked[3] = "Недостаточно очков способностей."
+arr_strLocReasonsLocked[4] = "Недостаточно высокое звание для этой способности."
+
+[CPS_MCM_Screen]
+ModName="Community Promotion Screen"
+PageTitle="Community Promotion Screen"
+GroupHeader="Общие настройки"
+
+SHOW_UNREACHED_PERKS_Label = "Отображает способности недоступных рангов"
+SHOW_UNREACHED_PERKS_Tip = "Обычно вы не можете знать способности заранее. Можно убрать это ограничение."
+
+DISABLE_TRAINING_CENTER_REQUIREMENT_Label = "Отключить требование постройки центра подготовки"
+DISABLE_TRAINING_CENTER_REQUIREMENT_Tips = "Обычные солдаты могут приобретать дополнительные способности только после построки центра подготовки. Вы можете убрать это требование."
+
+DISABLE_NEWCLASS_POPUPS_Label = "Отключить \"Новый класс\" всплывающие окна"
+DISABLE_NEWCLASS_POPUPS_Tips = "Обычно появляется окно каждый раз когда новобранец повышается и получает специализацию. Можно отключить."
+
+DISABLE_COMINT_POPUPS_Label = "Отключить вспылвающее окно обучения по боевой смекалке"
+DISABLE_COMINT_POPUPS_Tips = "Всплывающее окно обучения по боевой смекалке срабатывает, когда вы в компании впервые получаете солдата с этой самой боевой смекалкой. Можно отключить это всплывающее окно."
+
+ABILITY_TREE_PLANNER_MODE_Label = "Планировщик развития способностей"
+ABILITY_TREE_PLANNER_MODE_Tip = "Когда активировано, позволяет запланировать открытие способностей для каждого солдата индивидуально нажатием по способностям. Повторное нажатие снимает метку планировщика. В \"Обычном\" варианте, способности помечаются иконкой. В \"Улучшенном\" варианте, метки содержать числа для определения приоритета выбора способностей. В других случаях способности выбираются вручную, отметки лишь для напоминания."
+ABILITY_TREE_PLANNER_MODE_Strings[0] = "Отключено"
+ABILITY_TREE_PLANNER_MODE_Strings[1] = "Обычное"
+ABILITY_TREE_PLANNER_MODE_Strings[2] = "Улучшенное"
