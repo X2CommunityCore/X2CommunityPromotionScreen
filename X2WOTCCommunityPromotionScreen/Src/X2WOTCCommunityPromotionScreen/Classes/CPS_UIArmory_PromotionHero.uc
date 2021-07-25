@@ -1931,10 +1931,10 @@ private simulated function bool OnUnrealCommand_UIArmory_PromotionHero_Override(
 		break;
 	}
 
-	return bHandled || OnUnrealCommand_OnUnrealCommand_UIArmory_Promotion_Override(cmd, arg);
+	return bHandled || OnUnrealCommand_UIArmory_Promotion_Override(cmd, arg);
 }
 
-private simulated function bool OnUnrealCommand_OnUnrealCommand_UIArmory_Promotion_Override(int cmd, int arg)
+private simulated function bool OnUnrealCommand_UIArmory_Promotion_Override(int cmd, int arg)
 {
 	local XComGameStateHistory History;
 	local bool bHandled;
