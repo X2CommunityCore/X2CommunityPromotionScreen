@@ -466,7 +466,7 @@ function bool UpdateAbilityIcons_Override(out CPS_UIArmory_PromotionHeroColumn C
 				// Look ahead to the next rank and check to see if the current ability is a prereq for the next one
 				// If so, turn on the connection arrow between them
 				//if (Column.Rank < (class'X2ExperienceConfig'.static.GetMaxRank() - 2) && Unit.GetRank() > (Column.Rank + 1))
-				if (Column.Rank < (Columns.Length - 2) && Unit.GetRank() > (Column.Rank + 1) || `GETMCMVAR(SHOW_UNREACHED_PERKS)) // Issue #61 - always connect abilities if "Show unreached perks" is enabled.
+				if (Column.Rank < (Columns.Length - 2) && (Unit.GetRank() > (Column.Rank + 1) || `GETMCMVAR(SHOW_UNREACHED_PERKS))) // Issue #61 - always connect abilities if "Show unreached perks" is enabled.
 				{
 					bConnectToNextAbility = false;
 					NextRankTree = Unit.GetRankAbilities(Column.Rank + 1);
@@ -544,17 +544,14 @@ simulated function UpdateNavHelp()
 	}
 
 	NavHelp = `HQPRES.m_kAvengerHUD.NavHelp;
+	if (NavHelp == none)
+		return; // Issue #28 - prevent 'accessed none' log warnings.
 
 	NavHelp.ClearButtonHelp();
 
 	if (UIAfterAction(Movie.Stack.GetScreen(class'UIAfterAction')) != none)
 	{
 		NavHelp.AddBackButton(OnCancel);
-
-		if (UIArmory_PromotionItem(List.GetSelectedItem()).bEligibleForPromotion && `ISCONTROLLERACTIVE)
-		{
-			NavHelp.AddSelectNavHelp();
-		}
 
 		if (!`ISCONTROLLERACTIVE)
 		{
@@ -571,11 +568,8 @@ simulated function UpdateNavHelp()
 
 		if (`ISCONTROLLERACTIVE)
 		{
-			if (!UIArmory_PromotionItem(List.GetSelectedItem()).bIsDisabled)
-			{
-				NavHelp.AddCenterHelp(m_strInfo, class'UIUtilities_Input'.static.GetGamepadIconPrefix() $class'UIUtilities_Input'.const.ICON_LSCLICK_L3);
-			}
-
+			NavHelp.AddCenterHelp(m_strInfo, class'UIUtilities_Input'.static.GetGamepadIconPrefix() $class'UIUtilities_Input'.const.ICON_LSCLICK_L3);
+			
 			if (IsAllowedToCycleSoldiers() && class'UIUtilities_Strategy'.static.HasSoldiersToCycleThrough(UnitReference, CanCycleTo))
 			{
 				NavHelp.AddCenterHelp(m_strTabNavHelp, class'UIUtilities_Input'.static.GetGamepadIconPrefix() $ class'UIUtilities_Input'.const.ICON_LBRB_L1R1); // bsg-jrebar (5/23/17): Removing inlined buttons
@@ -587,11 +581,6 @@ simulated function UpdateNavHelp()
 	else
 	{
 		NavHelp.AddBackButton(OnCancel);
-
-		if (UIArmory_PromotionItem(List.GetSelectedItem()).bEligibleForPromotion)
-		{
-			NavHelp.AddSelectNavHelp();
-		}
 
 		if (XComHQPresentationLayer(Movie.Pres) != none)
 		{
@@ -632,13 +621,10 @@ simulated function UpdateNavHelp()
 
 		if (`ISCONTROLLERACTIVE)
 		{
-			if (!UIArmory_PromotionItem(List.GetSelectedItem()).bIsDisabled)
-			{
-				// KDM : Add the 'show abilities' tip to the left help panel so it
-				// doesn't overlap with the cycle soldiers tip.
-				NavHelp.AddLeftHelp(m_strInfo, class'UIUtilities_Input'.static.GetGamepadIconPrefix() $ class'UIUtilities_Input'.const.ICON_LSCLICK_L3);
-			}
-
+			// KDM : Add the 'show abilities' tip to the left help panel so it
+			// doesn't overlap with the cycle soldiers tip.
+			NavHelp.AddLeftHelp(m_strInfo, class'UIUtilities_Input'.static.GetGamepadIconPrefix() $ class'UIUtilities_Input'.const.ICON_LSCLICK_L3);
+			
 			if (IsAllowedToCycleSoldiers() && class'UIUtilities_Strategy'.static.HasSoldiersToCycleThrough(UnitReference, CanCycleTo))
 			{
 				NavHelp.AddCenterHelp(m_strTabNavHelp, class'UIUtilities_Input'.static.GetGamepadIconPrefix() $ class'UIUtilities_Input'.const.ICON_LBRB_L1R1); // bsg-jrebar (5/23/17): Removing inlined buttons
@@ -731,7 +717,7 @@ simulated function bool OnUnrealCommand(int cmd, int arg)
 			break;
 	}
 
-	return bHandled || super.OnUnrealCommand(cmd, arg);
+	return bHandled || OnUnrealCommand_UIArmory_PromotionHero_Override(cmd, arg);
 }
 
 function OnScrollBarChange(float newValue)
@@ -1418,8 +1404,11 @@ simulated function ConfirmAbilityCallbackEx(Name Action)
 	else 	// if we got here it means we were going to upgrade an ability, but then we decided to cancel
 	{
 		Movie.Pres.PlayUISound(eSUISound_MenuClickNegative);
-		List.SetSelectedIndex(previousSelectedIndexOnFocusLost, true);
-		UIArmory_PromotionItem(List.GetSelectedItem()).SetSelectedAbility(SelectedAbilityIndex);
+
+		// Start Issue #28
+		//List.SetSelectedIndex(previousSelectedIndexOnFocusLost, true); // List is not used by the hero promotion screen.
+		//UIArmory_PromotionItem(List.GetSelectedItem()).SetSelectedAbility(SelectedAbilityIndex);
+		// End Issue #28
 	}
 }
 
@@ -1875,3 +1864,153 @@ simulated function AddChildTweenBetween(string ChildPath, String Prop, float Sta
 
 	MC.EndOp();
 }
+
+// Start Issue #28
+// Replace parent class functions that serve no purpose in CPS, but may get called anyway, generating log errors.
+simulated function UpdateClassRowSelection() {}
+
+simulated function Hide()
+{
+	super(UIScreen).Hide();
+
+	if (NavHelp != none)
+	{
+		NavHelp.Hide();
+	}
+}
+
+simulated function OnReceiveFocus()
+{
+	local XComHQPresentationLayer HQPres;
+
+	super(UIArmory).OnReceiveFocus();
+
+	HQPres = XComHQPresentationLayer(Movie.Pres);
+
+	if(HQPres != none)
+	{
+		if(bAfterActionPromotion) //If the AfterAction screen is running, let it position the camera
+			HQPres.CAMLookAtNamedLocation(AfterActionScreen.GetPromotionBlueprintTag(UnitReference), `HQINTERPTIME);
+		else
+			HQPres.CAMLookAtNamedLocation(CameraTag, `HQINTERPTIME);
+	}
+
+	UpdateNavHelp();
+
+	Columns[m_iCurrentlySelectedColumn].OnReceiveFocus();
+}
+
+private simulated function bool OnUnrealCommand_UIArmory_PromotionHero_Override(int cmd, int arg)
+{
+	local bool bHandled;
+
+	if (!CheckInputIsReleaseOrDirectionRepeat(cmd, arg))
+	{
+		return false;
+	}
+
+	bHandled = true;
+	
+	bHandled = Columns[m_iCurrentlySelectedColumn].OnUnrealCommand(cmd, arg); // bsg-nlong (1.25.17): Send the input to the column first and see if it can consume it
+	if (bHandled) return true;
+
+	switch(cmd)
+	{
+	case class'UIUtilities_Input'.const.FXS_DPAD_RIGHT:
+	case class'UIUtilities_Input'.const.FXS_VIRTUAL_LSTICK_RIGHT:
+		SelectNextColumn();
+		bHandled = true;
+		break;
+	case class'UIUtilities_Input'.const.FXS_DPAD_LEFT :
+	case class'UIUtilities_Input'.const.FXS_VIRTUAL_LSTICK_LEFT :
+		SelectPrevColumn();
+		bHandled = true;
+		break;
+	default:
+		bHandled = false;
+		break;
+	}
+
+	return bHandled || OnUnrealCommand_UIArmory_Promotion_Override(cmd, arg);
+}
+
+private simulated function bool OnUnrealCommand_UIArmory_Promotion_Override(int cmd, int arg)
+{
+	local XComGameStateHistory History;
+	local bool bHandled;
+	local name SoldierClassName;
+	local XComGameState_Unit UpdatedUnit;
+	local XComGameState UpdateState;
+	local XComGameStateContext_ChangeContainer ChangeContainer;
+	local XComGameState_Unit Unit;
+	Unit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(UnitReference.ObjectID));
+
+	// Only pay attention to presses or repeats; ignoring other input types
+	if ( !CheckInputIsReleaseOrDirectionRepeat(cmd, arg) )
+		return false;
+
+	// Issue #28 - List is not used.
+	//if (List.GetSelectedItem().OnUnrealCommand(cmd, arg))
+	//{
+	//	UpdateNavHelp();
+	//	return true;
+	//}
+
+	bHandled = true;
+
+	switch( cmd )
+	{
+		// DEBUG: Press Tab to rank up the soldier
+		`if (`notdefined(FINAL_RELEASE))
+		case class'UIUtilities_Input'.const.FXS_KEY_TAB:
+			History = `XCOMHISTORY;
+			ChangeContainer = class'XComGameStateContext_ChangeContainer'.static.CreateEmptyChangeContainer("DEBUG Unit Rank Up");
+			UpdateState = History.CreateNewGameState(true, ChangeContainer);
+			UpdatedUnit = XComGameState_Unit(UpdateState.ModifyStateObject(class'XComGameState_Unit', GetUnit().ObjectID));
+
+			if (UpdatedUnit.GetRank() == 0)
+				SoldierClassName = class'UIUtilities_Strategy'.static.GetXComHQ().SelectNextSoldierClass();
+
+			UpdatedUnit.RankUpSoldier(UpdateState, SoldierClassName);
+
+			`GAMERULES.SubmitGameState(UpdateState);
+
+			PopulateData();
+			break;
+		`endif
+		case class'UIUtilities_Input'.const.FXS_MOUSE_5:
+		case class'UIUtilities_Input'.const.FXS_KEY_TAB:
+		case class'UIUtilities_Input'.const.FXS_BUTTON_RBUMPER:
+		case class'UIUtilities_Input'.const.FXS_MOUSE_4:
+		case class'UIUtilities_Input'.const.FXS_KEY_LEFT_SHIFT:
+		case class'UIUtilities_Input'.const.FXS_BUTTON_LBUMPER:
+			// Prevent switching soldiers during AfterAction promotion
+			if( UIAfterAction(Movie.Stack.GetScreen(class'UIAfterAction')) == none )
+				bHandled = false;
+			break;
+		case class'UIUtilities_Input'.const.FXS_BUTTON_B:
+		case class'UIUtilities_Input'.const.FXS_KEY_ESCAPE:
+		case class'UIUtilities_Input'.const.FXS_R_MOUSE_DOWN:
+			OnCancel();
+			break;
+		case class'UIUtilities_Input'.const.FXS_BUTTON_X: // bsg-jrebar (4/21/17): Changed UI flow and button positions per new additions
+			MakePosterButton();
+			break;
+		case class'UIUtilities_Input'.const.FXS_BUTTON_SELECT : // bsg-jrebar (4/21/17): Changed UI flow and button positions per new additions
+			//bsg-hlee (05.09.17): If the nav help does not how up do not allow the button to navigate to the facility. Condition taken from UpdateNavHelp when deciding to add the nav help or not.
+			if( class'UIUtilities_Strategy'.static.GetXComHQ().HasFacilityByName('RecoveryCenter') && IsAllowedToCycleSoldiers() && !`ScreenStack.IsInStack(class'UIFacility_TrainingCenter')
+			&& !`ScreenStack.IsInStack(class'UISquadSelect') && !`ScreenStack.IsInStack(class'UIAfterAction') && Unit.GetSoldierClassTemplate().bAllowAWCAbilities)
+				JumpToRecoveryFacility();
+		default:
+			bHandled = false;
+			break;
+	}
+
+	//if (List.Navigator.OnUnrealCommand(cmd, arg))
+	//{
+	//	return true;
+	//}
+	
+	return bHandled || super(UIArmory).OnUnrealCommand(cmd, arg);
+}
+// End Issue #28
