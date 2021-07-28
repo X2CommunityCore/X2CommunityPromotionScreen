@@ -397,6 +397,9 @@ function bool UpdateAbilityIcons_Override(out CPS_UIArmory_PromotionHeroColumn C
 	local int iAbility;
 	local bool bHasColumnAbility, bConnectToNextAbility;
 	local string AbilityName, AbilityIcon, BGColor, FGColor;
+	local bool bTrainingCenterPerk;
+	local bool bUnreachedRankPerk;
+	local bool bHidePerk;
 
 	AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
 	Unit = GetUnit();
@@ -406,6 +409,7 @@ function bool UpdateAbilityIcons_Override(out CPS_UIArmory_PromotionHeroColumn C
 	MaxPosition = Max(AbilityTree.Length - NUM_ABILITIES_PER_COLUMN, MaxPosition);
 
 	Column.AbilityNames.Length = 0;	
+	bUnreachedRankPerk = Column.Rank >= Unit.GetRank();
 
 	for (iAbility = Position; iAbility < Position + NUM_ABILITIES_PER_COLUMN; iAbility++)
 	{
@@ -425,8 +429,26 @@ function bool UpdateAbilityIcons_Override(out CPS_UIArmory_PromotionHeroColumn C
 				Column.AbilityNames.AddItem(AbilityTemplate.DataName);
 			}
 
-			// The unit is not yet at the rank needed for this column
-			if (!`GETMCMVAR(SHOW_UNREACHED_PERKS) && Column.Rank >= Unit.GetRank())
+			bTrainingCenterPerk = ClassTemplate.bAllowAWCAbilities && iAbility == AbilitiesPerRank;
+			
+			switch (`GETMCMVAR(SHOW_UNREACHED_PERKS_MODE))
+			{
+			// Hide Training Center perks. All of them are hidden if the Training Center is not built or if the perk is higher than current rank.
+			case 1:
+				bHidePerk = bTrainingCenterPerk && (!bCanSpendAP || bUnreachedRankPerk);
+				break;
+			// Always show all perks.
+			case 2:
+				bHidePerk = false;
+				break;
+			// Hide all perks from unreached ranks. Training Center perks are always hidden until Training Center is constructed.
+			case 0:
+			default:
+				bHidePerk = bUnreachedRankPerk || bTrainingCenterPerk && !bCanSpendAP;
+				break;
+			}
+
+			if (bHidePerk)
 			{
 				AbilityName = class'UIUtilities_Text'.static.GetColoredText(m_strAbilityLockedTitle, eUIState_Disabled);
 				AbilityIcon = class'UIUtilities_Image'.const.UnknownAbilityIcon;
@@ -466,7 +488,7 @@ function bool UpdateAbilityIcons_Override(out CPS_UIArmory_PromotionHeroColumn C
 				// Look ahead to the next rank and check to see if the current ability is a prereq for the next one
 				// If so, turn on the connection arrow between them
 				//if (Column.Rank < (class'X2ExperienceConfig'.static.GetMaxRank() - 2) && Unit.GetRank() > (Column.Rank + 1))
-				if (Column.Rank < (Columns.Length - 2) && (Unit.GetRank() > (Column.Rank + 1) || `GETMCMVAR(SHOW_UNREACHED_PERKS))) // Issue #61 - always connect abilities if "Show unreached perks" is enabled.
+				if (Column.Rank < (Columns.Length - 2) && (Unit.GetRank() > (Column.Rank + 1) || `GETMCMVAR(SHOW_UNREACHED_PERKS_MODE) > 0)) // Issue #61 - always connect abilities if "Show unreached perks" is enabled.
 				{
 					bConnectToNextAbility = false;
 					NextRankTree = Unit.GetRankAbilities(Column.Rank + 1);
@@ -1182,6 +1204,9 @@ function PreviewAbility(int Rank, int Branch)
 	local name PrereqAbilityName;
 	// Variable for Issue #128
 	local string MutuallyExclusiveNames;
+	local bool bHidePerk;
+	local bool bTrainingCenterPerk;
+	local bool bUnreachedRankPerk;
 
 	// NPSBDP Patch
 	Branch += Position;
@@ -1196,8 +1221,27 @@ function PreviewAbility(int Rank, int Branch)
 	{
 		AbilityCost = class'UIUtilities_Text'.static.GetColoredText(AbilityCost, eUIState_Bad);
 	}
+
+	bUnreachedRankPerk = Rank >= Unit.GetRank();
+	bTrainingCenterPerk = ClassTemplate.bAllowAWCAbilities && Branch == AbilitiesPerRank;
+	switch (`GETMCMVAR(SHOW_UNREACHED_PERKS_MODE))
+	{
+	// Hide Training Center perks. All of them are hidden if the Training Center is not built or if the perk is higher than current rank.
+	case 1:
+		bHidePerk = bTrainingCenterPerk && (!bCanSpendAP || bUnreachedRankPerk);
+		break;
+	// Always show all perks.
+	case 2:
+		bHidePerk = false;
+		break;
+	// Hide all perks from unreached ranks. Training Center perks are always hidden until Training Center is constructed.
+	case 0:
+	default:
+		bHidePerk = bUnreachedRankPerk || bTrainingCenterPerk && !bCanSpendAP;
+		break;
+	}
 		
-	if (!`GETMCMVAR(SHOW_UNREACHED_PERKS) && Rank >= Unit.GetRank())
+	if (bHidePerk)
 	{
 		AbilityIcon = class'UIUtilities_Image'.const.LockedAbilityIcon;
 		AbilityName = class'UIUtilities_Text'.static.GetColoredText(m_strAbilityLockedTitle, eUIState_Disabled);

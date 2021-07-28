@@ -21,8 +21,11 @@ ModName="Community Promotion Screen"
 PageTitle="Community Promotion Screen"
 GroupHeader="Общие настройки"
 
-SHOW_UNREACHED_PERKS_Label = "Показывать способности на недостигнутых рангах"
-SHOW_UNREACHED_PERKS_Tip = "Обычно вы не можете знать способности бойцов заранее. Эта опция позволяет убрать это ограничение."
+SHOW_UNREACHED_PERKS_MODE_Label = "Cпособности на недостигнутых рангах"
+SHOW_UNREACHED_PERKS_MODE_Tip = "Обычно вы не можете знать способности бойцов заранее. Эта опция позволяет убрать это ограничение."
+SHOW_UNREACHED_PERKS_MODE_Strings[0] = "Скрывать все"
+SHOW_UNREACHED_PERKS_MODE_Strings[1] = "Показывать Классовые Способности"
+SHOW_UNREACHED_PERKS_MODE_Strings[2] = "Показывать все"
 
 DISABLE_TRAINING_CENTER_REQUIREMENT_Label = "Отключить требование постройки центра подготовки"
 DISABLE_TRAINING_CENTER_REQUIREMENT_Tips = "Обычные солдаты могут приобретать дополнительные способности только после постройки центра подготовки. Эта опция позволяет убрать это требование."

@@ -74,7 +74,7 @@ function SelectAbility(int idx)
 		{
 			PromotionScreen.ConfirmAbilitySelection(Rank, idx);
 		}
-		else if (!PromotionScreen.IsAbilityLocked(Rank) && `GETMCMVAR(ABILITY_TREE_PLANNER_MODE) == 0) // Issue #53 - display the popup only if tagging is disabled
+		else if (!IsAbilityIconLocked(idx) && `GETMCMVAR(ABILITY_TREE_PLANNER_MODE) == 0) // Issue #53 - display the popup only if tagging is disabled
 		{
 			// This will display the ability info pop-up when the player directly clicks on an ability
 			// located on a rank already reached by the soldier. 

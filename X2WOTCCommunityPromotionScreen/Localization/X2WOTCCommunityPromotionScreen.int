@@ -16,8 +16,11 @@ ModName="Community Promotion Screen"
 PageTitle="Community Promotion Screen"
 GroupHeader="General Settings"
 
-SHOW_UNREACHED_PERKS_Label = "Display perks from unreached ranks"
-SHOW_UNREACHED_PERKS_Tip = "Normally you cannot preview perks from soldiers' future ranks. You can remove this restriction here."
+SHOW_UNREACHED_PERKS_MODE_Label = "Perks on unreached ranks"
+SHOW_UNREACHED_PERKS_MODE_Tip = "Normally you cannot preview perks from soldiers' future ranks. You can remove this restriction here."
+SHOW_UNREACHED_PERKS_MODE_Strings[0] = "Hide All"
+SHOW_UNREACHED_PERKS_MODE_Strings[1] = "Show Class Perks"
+SHOW_UNREACHED_PERKS_MODE_Strings[2] = "Show All"
 
 DISABLE_TRAINING_CENTER_REQUIREMENT_Label = "Disable Training Center requirement"
 DISABLE_TRAINING_CENTER_REQUIREMENT_Tips = "Normally regular soldier classes can unlock more than one perk per rank only if the player has the Training Center facility. You can disable this requirement here."

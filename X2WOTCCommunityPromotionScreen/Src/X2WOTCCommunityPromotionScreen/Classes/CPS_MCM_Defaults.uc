@@ -2,7 +2,7 @@ class CPS_MCM_Defaults extends object config(X2WOTCCommunityPromotionScreen_DEFA
 
 var config int VERSION_CFG;
 
-var config bool SHOW_UNREACHED_PERKS;
+var config int SHOW_UNREACHED_PERKS_MODE;
 var config bool DISABLE_TRAINING_CENTER_REQUIREMENT;
 var config bool DISABLE_NEWCLASS_POPUPS;
 var config bool DISABLE_COMINT_POPUPS;
