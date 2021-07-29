@@ -431,7 +431,7 @@ function bool UpdateAbilityIcons_Override(out CPS_UIArmory_PromotionHeroColumn C
 
 			bTrainingCenterPerk = ClassTemplate.bAllowAWCAbilities && iAbility == AbilitiesPerRank;
 			
-			switch (`GETMCMVAR(SHOW_UNREACHED_PERKS_MODE))
+			switch (class'CPS_MCM_Screen'.static.GET_SHOW_UNREACHED_PERKS_MODE())
 			{
 			// Hide Training Center perks. All of them are hidden if the Training Center is not built or if the perk is higher than current rank.
 			case 1:
@@ -488,7 +488,7 @@ function bool UpdateAbilityIcons_Override(out CPS_UIArmory_PromotionHeroColumn C
 				// Look ahead to the next rank and check to see if the current ability is a prereq for the next one
 				// If so, turn on the connection arrow between them
 				//if (Column.Rank < (class'X2ExperienceConfig'.static.GetMaxRank() - 2) && Unit.GetRank() > (Column.Rank + 1))
-				if (Column.Rank < (Columns.Length - 2) && (Unit.GetRank() > (Column.Rank + 1) || `GETMCMVAR(SHOW_UNREACHED_PERKS_MODE) > 0)) // Issue #61 - always connect abilities if "Show unreached perks" is enabled.
+				if (Column.Rank < (Columns.Length - 2) && (Unit.GetRank() > (Column.Rank + 1) || class'CPS_MCM_Screen'.static.GET_SHOW_UNREACHED_PERKS_MODE() > 0)) // Issue #61 - always connect abilities if "Show unreached perks" is enabled.
 				{
 					bConnectToNextAbility = false;
 					NextRankTree = Unit.GetRankAbilities(Column.Rank + 1);
@@ -1224,7 +1224,7 @@ function PreviewAbility(int Rank, int Branch)
 
 	bUnreachedRankPerk = Rank >= Unit.GetRank();
 	bTrainingCenterPerk = ClassTemplate.bAllowAWCAbilities && Branch == AbilitiesPerRank;
-	switch (`GETMCMVAR(SHOW_UNREACHED_PERKS_MODE))
+	switch (class'CPS_MCM_Screen'.static.GET_SHOW_UNREACHED_PERKS_MODE())
 	{
 	// Hide Training Center perks. All of them are hidden if the Training Center is not built or if the perk is higher than current rank.
 	case 1:

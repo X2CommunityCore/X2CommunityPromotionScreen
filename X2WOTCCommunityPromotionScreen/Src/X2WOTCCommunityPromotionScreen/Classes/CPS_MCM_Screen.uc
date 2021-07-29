@@ -6,6 +6,8 @@ var localized string ModName;
 var localized string PageTitle;
 var localized string GroupHeader;
 
+var config bool SHOW_UNREACHED_PERKS; // Deprecated, kept for legacy support.
+
 `include(X2WOTCCommunityPromotionScreen\Src\ModConfigMenuAPI\MCM_API_Includes.uci)
 
 `MCM_API_AutoIndexDropdownVars(SHOW_UNREACHED_PERKS_MODE);
@@ -66,12 +68,28 @@ simulated function SHOW_UNREACHED_PERKS_MODE_ChangeHandler(MCM_API_Setting _Sett
 
 simulated function LoadSavedSettings()
 {
-	SHOW_UNREACHED_PERKS_MODE = `GETMCMVAR(SHOW_UNREACHED_PERKS_MODE);
+	SHOW_UNREACHED_PERKS_MODE = GET_SHOW_UNREACHED_PERKS_MODE(); // Issue #69
 	DISABLE_TRAINING_CENTER_REQUIREMENT = `GETMCMVAR(DISABLE_TRAINING_CENTER_REQUIREMENT);
 	DISABLE_NEWCLASS_POPUPS = `GETMCMVAR(DISABLE_NEWCLASS_POPUPS);
 	DISABLE_COMINT_POPUPS = `GETMCMVAR(DISABLE_COMINT_POPUPS);
 	ABILITY_TREE_PLANNER_MODE = `GETMCMVAR(ABILITY_TREE_PLANNER_MODE);
 }
+
+// Begin Issue #69
+static final function int GET_SHOW_UNREACHED_PERKS_MODE()
+{
+	// Legacy support - if the user had SHOW_UNREACHED_PERKS set to true before the update,
+	// then treat it as if SHOW_UNREACHED_PERKS_MODE was set to "show all perks".
+	if (default.VERSION_CFG < 3 && default.SHOW_UNREACHED_PERKS)
+	{
+		return 2;
+	}
+	else
+	{
+		return `GETMCMVAR(SHOW_UNREACHED_PERKS_MODE);
+	}
+}
+// End Issue #69
 
 simulated function ResetButtonClicked(MCM_API_SettingsPage Page)
 {
