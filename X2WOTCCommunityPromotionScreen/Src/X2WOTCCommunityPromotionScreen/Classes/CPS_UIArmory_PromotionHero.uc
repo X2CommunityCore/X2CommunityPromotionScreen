@@ -1183,6 +1183,9 @@ function PreviewAbility(int Rank, int Branch)
 	// Variable for Issue #128
 	local string MutuallyExclusiveNames;
 
+	// Variable for Issue #55
+	local string SlotName;
+
 	// NPSBDP Patch
 	Branch += Position;
 
@@ -1294,6 +1297,15 @@ function PreviewAbility(int Rank, int Branch)
 		AbilityDesc $= "\n" $ class'UIUtilities_Text'.static.GetColoredText(DisabledReason, eUIState_Warning);
 	}
 
+	// Issue #55
+	if (`GETMCMVAR(SHOW_INVENTORY_SLOT))
+	{
+		SlotName = class'UIArmory_loadout'.default.m_strInventoryLabels[AbilityTree[Branch].ApplyToWeaponSlot];
+		if (SlotName != "")
+		{
+			AbilityName $= " (" $ Locs(SlotName) $ ")";
+		}
+	}
 	AS_SetDescriptionData(AbilityIcon, AbilityName, AbilityDesc, "", CostLabel, AbilityCost, APLabel);
 }
 

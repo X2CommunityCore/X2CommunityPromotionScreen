@@ -8,6 +8,7 @@ var localized string GroupHeader;
 
 `include(X2WOTCCommunityPromotionScreen\Src\ModConfigMenuAPI\MCM_API_Includes.uci)
 
+`MCM_API_AutoCheckBoxVars(SHOW_INVENTORY_SLOT);
 `MCM_API_AutoCheckBoxVars(SHOW_UNREACHED_PERKS);
 `MCM_API_AutoCheckBoxVars(DISABLE_TRAINING_CENTER_REQUIREMENT);
 `MCM_API_AutoCheckBoxVars(DISABLE_NEWCLASS_POPUPS);
@@ -16,6 +17,7 @@ var localized string GroupHeader;
 
 `include(X2WOTCCommunityPromotionScreen\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
 
+`MCM_API_AutoCheckBoxFns(SHOW_INVENTORY_SLOT, 3);
 `MCM_API_AutoCheckBoxFns(SHOW_UNREACHED_PERKS, 1);
 `MCM_API_AutoCheckBoxFns(DISABLE_TRAINING_CENTER_REQUIREMENT, 1);
 `MCM_API_AutoCheckBoxFns(DISABLE_NEWCLASS_POPUPS, 1);
@@ -45,6 +47,7 @@ simulated function ClientModCallback(MCM_API_Instance ConfigAPI, int GameMode)
 	// Issue #53
 	Group.AddDropdown('ABILITY_TREE_PLANNER_MODE', ABILITY_TREE_PLANNER_MODE_Label, ABILITY_TREE_PLANNER_MODE_Tip, ABILITY_TREE_PLANNER_MODE_Strings, ABILITY_TREE_PLANNER_MODE_Strings[ABILITY_TREE_PLANNER_MODE], ABILITY_TREE_PLANNER_MODE_SaveHandler).SetEditable(SHOW_UNREACHED_PERKS);
 	
+	`MCM_API_AutoAddCheckBox(Group, SHOW_INVENTORY_SLOT);	
 	`MCM_API_AutoAddCheckBox(Group, DISABLE_TRAINING_CENTER_REQUIREMENT);	
 	`MCM_API_AutoAddCheckBox(Group, DISABLE_NEWCLASS_POPUPS);	
 	`MCM_API_AutoAddCheckBox(Group, DISABLE_COMINT_POPUPS);	
@@ -63,6 +66,7 @@ simulated function SHOW_UNREACHED_PERKS_ChangeHandler(MCM_API_Setting _Setting, 
 
 simulated function LoadSavedSettings()
 {
+	SHOW_INVENTORY_SLOT = `GETMCMVAR(SHOW_INVENTORY_SLOT);
 	SHOW_UNREACHED_PERKS = `GETMCMVAR(SHOW_UNREACHED_PERKS);
 	DISABLE_TRAINING_CENTER_REQUIREMENT = `GETMCMVAR(DISABLE_TRAINING_CENTER_REQUIREMENT);
 	DISABLE_NEWCLASS_POPUPS = `GETMCMVAR(DISABLE_NEWCLASS_POPUPS);
@@ -72,6 +76,7 @@ simulated function LoadSavedSettings()
 
 simulated function ResetButtonClicked(MCM_API_SettingsPage Page)
 {
+	`MCM_API_AutoReset(SHOW_INVENTORY_SLOT);
 	`MCM_API_AutoReset(SHOW_UNREACHED_PERKS);
 	`MCM_API_AutoReset(DISABLE_TRAINING_CENTER_REQUIREMENT);
 	`MCM_API_AutoReset(DISABLE_NEWCLASS_POPUPS);
