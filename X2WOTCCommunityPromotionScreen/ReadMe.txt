@@ -44,4 +44,12 @@ Thanks to [b]RustyDios[/b] for providing the mod preview image.
 
 ====================================================================================================================
 
-Current version: 1.0
+## Current version: 1.1
+
+# Changelog:
+- Added an option to display the inventory slot to which the ability will be attached.
+- Fixed various log warnings caused by the mod during its normal operation.
+- Added Russian localization.
+- Added configuration to highlight Train From Armory mod as incompatible.
+
+## Current version: 1.0
