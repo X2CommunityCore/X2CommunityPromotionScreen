@@ -1,6 +1,6 @@
 [UISL_CPS]
 strDisablePopup = "NICHT WIEDER ZEIGEN"
-strPopupText = "\nHallo, hier spricht eine deiner Modifikationen, <font color='#005AB5'>[WOTC] Community Promotion Screen</font>n\nIch stelle fest das du eine überholte Version verwendest: <font color='#005AB5'>[WOTC] Community Promotion Screen</font>. Diese Version funktioniert weiterhin, aber du brauchst sie nicht.\n\nIch habe alle Funktionen von <font color='#005AB5'>[WOTC] Community Promotion Screen</font> und noch mehr, und alle Modifikationen, die diese alte Version benötigen, funktionieren auch mit mir.\n\nEs ist empfohlen dass du <font color='#005AB5'>[WOTC] Community Promotion Screen</font> deaktivierst oder deinstallierst. Ich übernehme alle ihre Aufgaben."
+strPopupText = "\nHallo, hier spricht eine deiner Modifikationen, <font color='#005AB5'>[WOTC] Community Promotion Screen</font>\nIch stelle fest das du eine überholte Version verwendest: <font color='#005AB5'>[WOTC] New Promotion Screen by Default</font>. Diese Version funktioniert weiterhin, aber du brauchst sie nicht.\n\nIch habe alle Funktionen von <font color='#005AB5'>[WOTC] New Promotion Screen by Default</font> und noch mehr, und alle Modifikationen, die diese alte Version benötigen, funktionieren auch mit mir.\n\nEs ist empfohlen dass du <font color='#005AB5'>[WOTC] New Promotion Screen by Default</font> deaktivierst oder deinstallierst. Ich übernehme alle ihre Aufgaben."
 
 [X2EventListener_PromotionScreenOverrides]
 SparkAbilityTreeTitles[0]="Kampf der Zukunft"
