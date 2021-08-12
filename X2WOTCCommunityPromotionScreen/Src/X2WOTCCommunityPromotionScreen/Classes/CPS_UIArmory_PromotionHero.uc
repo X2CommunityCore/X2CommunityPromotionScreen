@@ -1948,12 +1948,12 @@ private simulated function bool OnUnrealCommand_UIArmory_PromotionHero_Override(
 
 private simulated function bool OnUnrealCommand_UIArmory_Promotion_Override(int cmd, int arg)
 {
-	local XComGameStateHistory History;
+	//local XComGameStateHistory History;
 	local bool bHandled;
-	local name SoldierClassName;
-	local XComGameState_Unit UpdatedUnit;
-	local XComGameState UpdateState;
-	local XComGameStateContext_ChangeContainer ChangeContainer;
+	//local name SoldierClassName;
+	//local XComGameState_Unit UpdatedUnit;
+	//local XComGameState UpdateState;
+	//local XComGameStateContext_ChangeContainer ChangeContainer;
 	local XComGameState_Unit Unit;
 	Unit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(UnitReference.ObjectID));
 
@@ -1973,23 +1973,23 @@ private simulated function bool OnUnrealCommand_UIArmory_Promotion_Override(int 
 	switch( cmd )
 	{
 		// DEBUG: Press Tab to rank up the soldier
-		`if (`notdefined(FINAL_RELEASE))
-		case class'UIUtilities_Input'.const.FXS_KEY_TAB:
-			History = `XCOMHISTORY;
-			ChangeContainer = class'XComGameStateContext_ChangeContainer'.static.CreateEmptyChangeContainer("DEBUG Unit Rank Up");
-			UpdateState = History.CreateNewGameState(true, ChangeContainer);
-			UpdatedUnit = XComGameState_Unit(UpdateState.ModifyStateObject(class'XComGameState_Unit', GetUnit().ObjectID));
+		//`if (`notdefined(FINAL_RELEASE))
+		//case class'UIUtilities_Input'.const.FXS_KEY_TAB:
+		//	History = `XCOMHISTORY;
+		//	ChangeContainer = class'XComGameStateContext_ChangeContainer'.static.CreateEmptyChangeContainer("DEBUG Unit Rank Up");
+		//	UpdateState = History.CreateNewGameState(true, ChangeContainer);
+		//	UpdatedUnit = XComGameState_Unit(UpdateState.ModifyStateObject(class'XComGameState_Unit', GetUnit().ObjectID));
 
-			if (UpdatedUnit.GetRank() == 0)
-				SoldierClassName = class'UIUtilities_Strategy'.static.GetXComHQ().SelectNextSoldierClass();
+		//	if (UpdatedUnit.GetRank() == 0)
+		//		SoldierClassName = class'UIUtilities_Strategy'.static.GetXComHQ().SelectNextSoldierClass();
 
-			UpdatedUnit.RankUpSoldier(UpdateState, SoldierClassName);
+		//	UpdatedUnit.RankUpSoldier(UpdateState, SoldierClassName);
 
-			`GAMERULES.SubmitGameState(UpdateState);
+		//	`GAMERULES.SubmitGameState(UpdateState);
 
-			PopulateData();
-			break;
-		`endif
+		//	PopulateData();
+		//	break;
+		//`endif
 		case class'UIUtilities_Input'.const.FXS_MOUSE_5:
 		case class'UIUtilities_Input'.const.FXS_KEY_TAB:
 		case class'UIUtilities_Input'.const.FXS_BUTTON_RBUMPER:
