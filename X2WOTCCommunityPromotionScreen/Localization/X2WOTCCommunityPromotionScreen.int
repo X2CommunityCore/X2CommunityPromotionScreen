@@ -23,13 +23,13 @@ SHOW_INVENTORY_SLOT_Label = "Display inventory slot"
 SHOW_INVENTORY_SLOT_Tip = "Toggles the display of the inventory slot to which the ability is attached to. Keep in mind the ability being attached to a slot does not always mean the ability will work only with items in that inventory slot."
 
 DISABLE_TRAINING_CENTER_REQUIREMENT_Label = "Disable Training Center requirement"
-DISABLE_TRAINING_CENTER_REQUIREMENT_Tips = "Normally regular soldier classes can unlock more than one perk per rank only if the player has the Training Center facility. You can disable this requirement here."
+DISABLE_TRAINING_CENTER_REQUIREMENT_Tip = "Normally regular soldier classes can unlock more than one perk per rank only if the player has the Training Center facility. You can disable this requirement here."
 
 DISABLE_NEWCLASS_POPUPS_Label = "Disable \"New Class\" popups"
-DISABLE_NEWCLASS_POPUPS_Tips = "Normally a popup is displayed each time a rookie is promoted to a new class. You can disable this popup here."
+DISABLE_NEWCLASS_POPUPS_Tip = "Normally a popup is displayed each time a rookie is promoted to a new class. You can disable this popup here."
 
 DISABLE_COMINT_POPUPS_Label = "Disable Combat Intelligence tutorial popup"
-DISABLE_COMINT_POPUPS_Tips = "Normally a popup is displayed when you enter the promotion screen of a high Combat Intelligence soldier for the first time in a campaign. You can disable this popup here."
+DISABLE_COMINT_POPUPS_Tip = "Normally a popup is displayed when you enter the promotion screen of a high Combat Intelligence soldier for the first time in a campaign. You can disable this popup here."
 
 ABILITY_TREE_PLANNER_MODE_Label = "Ability Tree planner mode"
 ABILITY_TREE_PLANNER_MODE_Tip = "When enabled, this feature allows you tag the perks you plan to unlock for each individual soldier by clicking on them. Click on the perk again to remove the tag. In \"Basic\" mode, abilities are tagged with icons. In \"Advanced\" mode, tags contain numbers that can serve as unlock order or priority. In either mode you still have to unlock new abilities yourself, the tags serve just as a reminder."
