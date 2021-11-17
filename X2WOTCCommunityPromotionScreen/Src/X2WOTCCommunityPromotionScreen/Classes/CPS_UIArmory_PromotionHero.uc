@@ -400,7 +400,15 @@ function bool UpdateAbilityIcons_Override(out CPS_UIArmory_PromotionHeroColumn C
 
 	AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
 	Unit = GetUnit();
-	AbilityTree = Unit.GetRankAbilities(Column.Rank);
+
+	// Start issue #74 - do not call GetRankAbilities with higher ranks than what exists on the unit.
+	// AbilityTree is left empty and no abilities will be added to the column for ranks higher than the unit has.
+	// This also avoids the associated rescreen error from misuse of GetRankAbilities().
+	if (Column.Rank < Unit.AbilityTree.Length)
+	{
+		AbilityTree = Unit.GetRankAbilities(Column.Rank);
+	}
+	// End Issue #74
 
 	// MaxPosition is the maximum value for Position
 	MaxPosition = Max(AbilityTree.Length - NUM_ABILITIES_PER_COLUMN, MaxPosition);
@@ -466,7 +474,8 @@ function bool UpdateAbilityIcons_Override(out CPS_UIArmory_PromotionHeroColumn C
 				// Look ahead to the next rank and check to see if the current ability is a prereq for the next one
 				// If so, turn on the connection arrow between them
 				//if (Column.Rank < (class'X2ExperienceConfig'.static.GetMaxRank() - 2) && Unit.GetRank() > (Column.Rank + 1))
-				if (Column.Rank < (Columns.Length - 2) && (Unit.GetRank() > (Column.Rank + 1) || `GETMCMVAR(SHOW_UNREACHED_PERKS))) // Issue #61 - always connect abilities if "Show unreached perks" is enabled.
+				//if (Column.Rank < (Columns.Length - 2) && (Unit.GetRank() > (Column.Rank + 1) || `GETMCMVAR(SHOW_UNREACHED_PERKS))) // Issue #61 - always connect abilities if "Show unreached perks" is enabled.
+				if (Column.Rank < (Unit.AbilityTree.Length - 1) && (Unit.GetRank() > (Column.Rank + 1) || `GETMCMVAR(SHOW_UNREACHED_PERKS))) // Issue #74 - do not check for prereqs beyond the units ability tree.
 				{
 					bConnectToNextAbility = false;
 					NextRankTree = Unit.GetRankAbilities(Column.Rank + 1);
