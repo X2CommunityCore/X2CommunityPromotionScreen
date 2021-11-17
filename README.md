@@ -10,7 +10,6 @@ An improved XCOM 2 mod build system. The following (in no praticular order) are 
 * Full HL building: final release compiling and cooking of native script packages
 * Scriptable hooks in the build process
 * Conversion of localization file(s) encoding (UTF8 in the project for correct git merging and UTF16 for correct game loading)
-* Validation of `.x2proj` for cases when devs are using both ModBuddy and VSCode
 * Mod asset cooking (experimental)
 * Correct removal of files from the steamapps/XCOM2/WOTC/XComGame/Mods (built mod) when they are deleted from the project
 * Mod-defined global macros (without explicit `include`s and without messing with your `SrcOrig`)
@@ -30,12 +29,12 @@ Open a command line prompt (cmd or powershell, does not matter) in the `[modRoot
 your working tree is clean and run the following command:
 
 ```
-git subtree add --prefix .scripts/X2ModBuildCommon https://github.com/X2CommunityCore/X2ModBuildCommon main --squash
+git subtree add --prefix .scripts/X2ModBuildCommon https://github.com/X2CommunityCore/X2ModBuildCommon v1.1.1 --squash
 ```
 
 ### Your mod does not use git
-Download the source code of this repository from GitHub. Unzip it and place so that `build_commom.ps1` resides at
-`[modRoot]\.scripts\X2ModBuildCommon\build_common.ps1`.
+Download the source code of this repository from the latest release on the [Releases page](https://github.com/X2CommunityCore/X2ModBuildCommon/releases/latest).
+Unzip it and place so that `build_common.ps1` resides at `[modRoot]\.scripts\X2ModBuildCommon\build_common.ps1`.
 
 ## Ignoring the `BuildCache`
 The build system will create a `[modRoot]\BuildCache` folder which is used for various file-based operations (such
@@ -81,7 +80,14 @@ switch ($config)
 $builder.InvokeBuild()
 ```
 
-Replace `YourProjectName` with the internal mod name (e.g. the name of your `.XCOM_sln` file without the extension)
+Replace `YourProjectName` with the mod project name (e.g. the name of your `.XCOM_sln` file without the extension).
+
+If you're transitioning an existing mod to X2ModBuildCommon, this advice might come too late, but we recommend that
+the project name contain only ASCII alphabetic characters, numbers and underscores (matching the regular expression `^[A-Za-z][A-Za-z0-9_]*$`).
+The ModBuddy project generator lets you create projects with a large variety of characters that will break the ModBuddy
+build already (like brackets and dashes), but spaces and semicolons are allowed and work fine with the Firaxis ModBuddy plugin.
+`X2ModBuildCommon` will do its best to support project names with spaces, but it's historically been a common source of bugs
+and you may run into fewer of them if you keep your mod name simple.
 
 ## IDE integration
 At this point your mod is actually ready for building but invoking the powershell script with all the arguments each time manually
@@ -104,6 +110,12 @@ Replace it with following:
   </PropertyGroup>
   <Import Project="$(BuildCommonRoot)XCOM2.targets" />
 ```
+
+Note that the build tool does not care about most of the `.x2proj` file and will
+copy and compile files not referenced by the project file without issuing warnings.
+Consider using a tool like [Xymanek/X2ProjectGenerator](https://github.com/Xymanek/X2ProjectGenerator)
+to automatically ensure the file list in ModBuddy accurately lists the files part of the project.
+
 
 ### VSCode
 
@@ -149,6 +161,11 @@ name in the "Clean" task):
             "command": "powershell.exe –NonInteractive –ExecutionPolicy Unrestricted -file '${workspaceRoot}\\.scripts\\clean.ps1' -modName 'MY_MOD_NAME' -srcDirectory '${workspaceRoot}' -sdkPath '${config:xcom.highlander.sdkroot}' -gamePath '${config:xcom.highlander.gameroot}'",
             "group": "build",
             "problemMatcher": []
+        },
+        {
+            "label": "Full rebuild",
+            "dependsOrder": "sequence",
+            "dependsOn": ["Clean", "Build"]
         }
     ]
 }
@@ -172,7 +189,7 @@ If you don't use git, simply download the new version and overwrite the old file
 If you use git, run the same command as before, replacing `add` with `pull`:
 
 ```
-git subtree pull --prefix .scripts/X2ModBuildCommon https://github.com/X2CommunityCore/X2ModBuildCommon main --squash
+git subtree pull --prefix .scripts/X2ModBuildCommon https://github.com/X2CommunityCore/X2ModBuildCommon v1.1.1 --squash
 ```
 
 # Configuration options
@@ -287,7 +304,7 @@ Assuming the file is named `ContentOptions.json`:
 $builder.SetContentOptionsJsonFilename("ContentOptions.json")
 ```
 
-Four options are avaliable: `missingUncooked`, `sfStandalone`, `sfMaps`, `sfCollectionMaps`. Omitting an option (or the file entirely)
+Four options are available: `missingUncooked`, `sfStandalone`, `sfMaps`, `sfCollectionMaps`. Omitting an option (or the file entirely)
 is treated the same as setting it to an empty array
 
 ### Including missing uncooked
