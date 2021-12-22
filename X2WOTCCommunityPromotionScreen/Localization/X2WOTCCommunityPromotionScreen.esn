@@ -6,3 +6,38 @@ strPopupText = "\nBienvenido. Éste es tu mod en uso, <font color='#00ff00'>[WOT
 SparkAbilityTreeTitles[0]="Combate del futuro"
 SparkAbilityTreeTitles[1]="Máquina de guerra"
 SparkAbilityTreeTitles[2]="XCOM"
+
+[CPS_UIArmory_PromotionHero]
+m_strMutuallyExclusive = "Excluyentes mutuamente con:"
+
+arr_strLocReasonsLocked[0] = "Prerrequisito de habilidad requerido."
+arr_strLocReasonsLocked[1] = "Escoge primero en este rango la habilidad de clase del soldado."
+arr_strLocReasonsLocked[2] = "Necesita la instalación Centro de entrenamiento."
+arr_strLocReasonsLocked[3] = "No hay suficientes puntos de habilidad."
+arr_strLocReasonsLocked[4] = "Requiere un rango más elevado."
+
+[CPS_MCM_Screen]
+ModName="Pantalla de promoción comunitaria"
+PageTitle="Pantalla de promoción comunitaria"
+GroupHeader="Configuración general"
+
+SHOW_UNREACHED_PERKS_Label = "Mostrar habilidades de rangos bloqueados"
+SHOW_UNREACHED_PERKS_Tip = "Normalmente no es posible obtener una vista previa de las habilidades de los futuros rangos de los soldados. Puedes eliminar esta restricción aquí."
+
+SHOW_INVENTORY_SLOT_Label = "Mostrar espacio de inventario"
+SHOW_INVENTORY_SLOT_Tip = "Alterna la visualización del espacio de inventario al que está asociada la habilidad. Ten en cuenta que la habilidad que se adjunta a un espacio no siempre significa que funcionará sólo con los elementos de ese espacio del inventario."
+
+DISABLE_TRAINING_CENTER_REQUIREMENT_Label = "Desactivar el requisito del Centro de entrenamiento"
+DISABLE_TRAINING_CENTER_REQUIREMENT_Tip = "Normalmente, las clases de soldados normales pueden desbloquear más de una habilidad por rango sólo si el jugador tiene la instalación del Centro de entrenamiento. Puedes deshabilitar este requisito aquí."
+
+DISABLE_NEWCLASS_POPUPS_Label = "Desactivar \"Nueva clase\" ventanas emergentes"
+DISABLE_NEWCLASS_POPUPS_Tip = "Normalmente se muestra una ventana emergente cada vez que un novato asciende a una nueva clase. Puedes deshabilitar esta ventana emergente aquí."
+
+DISABLE_COMINT_POPUPS_Label = "Desactivar la ventana emergente del tutorial de inteligencia de combate"
+DISABLE_COMINT_POPUPS_Tip = "Normalmente se muestra una ventana emergente cuando ingresas a la pantalla de ascenso de un soldado de alta inteligencia de combate por primera vez en una campaña. Puedes deshabilitar esta ventana emergente aquí."
+
+ABILITY_TREE_PLANNER_MODE_Label = "Modo prueba del árbol de habilidades"
+ABILITY_TREE_PLANNER_MODE_Tip = "Cuando está habilitada, esta función te permite etiquetar (haciendo clic en ellos) las habilidades que planeas desbloquear para cada soldado individual. Vuelve a hacer clic en el talento para eliminar la etiqueta. En el modo \"Básico\" las habilidades están etiquetadas con iconos. En el modo \"Avanzado\" , las etiquetas contienen números que pueden servir como orden de desbloqueo o prioridad. De todas formas, todavía tienes que desbloquear nuevas habilidades tú mismo, puesto que las etiquetas sirven sólo como un recordatorio."
+ABILITY_TREE_PLANNER_MODE_Strings[0] = "Desactivado"
+ABILITY_TREE_PLANNER_MODE_Strings[1] = "Básico"
+ABILITY_TREE_PLANNER_MODE_Strings[2] = "Avanzado"
