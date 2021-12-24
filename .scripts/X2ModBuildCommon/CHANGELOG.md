@@ -1,5 +1,18 @@
 ## Next
 
+## 1.2.1 (2021-12-22)
+
+* Support mods without script packages
+
+## 1.2.0 (2021-12-19)
+
+* Significant improvements/rework of the asset cooking step (#70)
+
+## 1.1.2 (2021-11-30)
+
+* Shader precompile step is no longer triggered by maps
+* Asset cooking step no longer overwrites `DefaultEngine.ini` in the SDK
+
 ## 1.1.1 (2021-08-11)
 
 * Support Rebuild ModBuddy target
