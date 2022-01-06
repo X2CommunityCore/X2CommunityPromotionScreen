@@ -1,6 +1,41 @@
+[CPS_UIArmory_PromotionHero]
+m_strMutuallyExclusive = "Schließt sich gegenseitig aus mit:"
+
+arr_strLocReasonsLocked[0] = "Voraussetzung Fähigkeit erforderlich."
+arr_strLocReasonsLocked[1] = "Wähle zuerst die Fähigkeit der Soldatenklasse auf diesem Rang aus."
+arr_strLocReasonsLocked[2] = "Trainingszentrum-Einrichtung erforderlich."
+arr_strLocReasonsLocked[3] = "Nicht genug Fähigkeitspunkte."
+arr_strLocReasonsLocked[4] = "Höherer Rang erforderlich."
+
 [UISL_CPS]
 strDisablePopup = "NICHT WIEDER ZEIGEN"
 strPopupText = "\nHallo, hier spricht eine deiner Modifikationen, <font color='#005AB5'>[WOTC] Community Promotion Screen</font>\nIch stelle fest das du eine überholte Version verwendest: <font color='#005AB5'>[WOTC] New Promotion Screen by Default</font>. Diese Version funktioniert weiterhin, aber du brauchst sie nicht.\n\nIch habe alle Funktionen von <font color='#005AB5'>[WOTC] New Promotion Screen by Default</font> und noch mehr, und alle Modifikationen, die diese alte Version benötigen, funktionieren auch mit mir.\n\nEs ist empfohlen dass du <font color='#005AB5'>[WOTC] New Promotion Screen by Default</font> deaktivierst oder deinstallierst. Ich übernehme alle ihre Aufgaben."
+
+[CPS_MCM_Screen]
+ModName="Community Promotion Screen"
+PageTitle="Community Promotion Screen"
+GroupHeader="Allgemeine Einstellungen"
+
+SHOW_UNREACHED_PERKS_Label = "Fähigkeiten von unerreichten Rängen anzeigen"
+SHOW_UNREACHED_PERKS_Tip = "Normalerweise kannst du die Fähigkeiten der zukünftigen Ränge von Soldaten nicht in der Vorschau anzeigen. Du kannst diese Einschränkung hier aufheben."
+
+SHOW_INVENTORY_SLOT_Label = "Inventarplatz anzeigen"
+SHOW_INVENTORY_SLOT_Tip = "Schaltet die Anzeige des Inventarplatzes um, an den die Fähigkeit angehängt ist. Beachte, dass eine Fähigkeit, die an einen Slot gebunden ist, nicht immer bedeutet, dass sie nur mit Gegenständen in diesem Inventarplatz funktioniert."
+
+DISABLE_TRAINING_CENTER_REQUIREMENT_Label = "Anforderung Trainingszentrum deaktivieren"
+DISABLE_TRAINING_CENTER_REQUIREMENT_Tip = "Normalerweise können reguläre Soldatenklassen nur dann mehr als eine Fähigkeit pro Rang freischalten, wenn der Spieler über das Trainingszentrum verfügt. Du kannst diese Anforderung hier deaktivieren."
+
+DISABLE_NEWCLASS_POPUPS_Label = "Popup-Fenster \"Neue Klasse\" deaktivieren"
+DISABLE_NEWCLASS_POPUPS_Tip = "Normalerweise wird ein Popup-Fenster angezeigt, wenn ein Rekrut in eine neue Klasse befördert wird. Du kannst diese Popups hier deaktivieren."
+
+DISABLE_COMINT_POPUPS_Label = "Popup-Fenster für das Kampfintelligenz-Tutorial deaktivieren"
+DISABLE_COMINT_POPUPS_Tip = "Normalerweise wird ein Popup-Fenster angezeigt, wenn du in einer Kampagne zum ersten Mal den Beförderungsbildschirm eines Soldaten mit hoher Kampfintelligenz aufrufst. Du kannst dieses Popup hier deaktivieren."
+
+ABILITY_TREE_PLANNER_MODE_Label = "Fähigkeitenbaum Planungsmodus"
+ABILITY_TREE_PLANNER_MODE_Tip = "Wenn diese Funktion aktiviert ist, kannst du die Fähigkeiten, die du für jeden einzelnen Soldaten freischalten möchtest, markieren, indem du auf sie klickst. Klicke erneut auf die Fähigkeit, um die Markierung zu entfernen. Im Modus \"Grundlegend\" werden die Fähigkeiten mit Symbolen gekennzeichnet. Im Modus \"Fortgeschritten\" enthalten die Markierungen Zahlen, die als Freischaltreihenfolge oder Priorität dienen können. In beiden Modi musst du neue Fähigkeiten immer noch selbst freischalten, die Markierungen dienen nur als Erinnerung."
+ABILITY_TREE_PLANNER_MODE_Strings[0] = "Deaktiviert"
+ABILITY_TREE_PLANNER_MODE_Strings[1] = "Grundlegend"
+ABILITY_TREE_PLANNER_MODE_Strings[2] = "Fortgeschritten"
 
 [X2EventListener_PromotionScreenOverrides]
 SparkAbilityTreeTitles[0]="Kampf der Zukunft"
