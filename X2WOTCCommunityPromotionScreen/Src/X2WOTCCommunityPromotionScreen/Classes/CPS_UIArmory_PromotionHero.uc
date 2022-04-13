@@ -180,6 +180,7 @@ simulated function PopulateData()
 	local XComGameState_ResistanceFaction FactionState;
 	local XComGameState_HeadquartersXCom XComHQ;
 	local XComGameState NewGameState;
+	local StackedUIIconData StackedClassIcon; // Variable for issue #81
 
 	Unit = GetUnit();
 
@@ -238,15 +239,23 @@ simulated function PopulateData()
 	AS_SetRank(rankIcon);
 	AS_SetClass(classIcon);
 
+	// Start Issue #81
+	StackedClassIcon = StateUnit.GetStackedClassIcon();
+	if (StackedClassIcon.Images.Length > 0)
+	{
+		AS_SetFactionIcon(StackedClassIcon);
+	}
+
 	if (FactionState != none)
 	{
-		AS_SetFaction(FactionState.GetFactionIcon());
+		// AS_SetFaction(FactionState.GetFactionIcon());
 		AS_SetHeaderData(Caps(FactionState.GetFactionTitle()), Caps(Unit.GetName(eNameType_FullNick)), HeaderString, m_strSharedAPLabel, m_strSoldierAPLabel);
 	}
 	else
 	{
 		AS_SetHeaderData("", Caps(Unit.GetName(eNameType_FullNick)), HeaderString, m_strSharedAPLabel, m_strSoldierAPLabel);
 	}
+	// End Issue #81
 
 	AS_SetAPData(GetSharedAbilityPoints(), Unit.AbilityPoints);
 	AS_SetCombatIntelData(Unit.GetCombatIntelligenceLabel());
