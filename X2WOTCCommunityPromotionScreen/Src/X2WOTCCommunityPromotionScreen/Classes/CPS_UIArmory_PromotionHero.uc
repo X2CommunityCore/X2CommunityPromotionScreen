@@ -243,7 +243,7 @@ simulated function PopulateData()
 	StackedClassIcon = Unit.GetStackedClassIcon();
 	if (StackedClassIcon.Images.Length > 0)
 	{
-		AS_SetFactionIcon(StackedClassIcon);
+		AS_SetFaction(StackedClassIcon);
 	}
 
 	if (FactionState != none)
