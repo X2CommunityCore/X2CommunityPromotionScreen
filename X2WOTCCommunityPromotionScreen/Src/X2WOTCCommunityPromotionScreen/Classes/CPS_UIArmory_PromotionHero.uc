@@ -240,7 +240,7 @@ simulated function PopulateData()
 	AS_SetClass(classIcon);
 
 	// Start Issue #81
-	StackedClassIcon = StateUnit.GetStackedClassIcon();
+	StackedClassIcon = Unit.GetStackedClassIcon();
 	if (StackedClassIcon.Images.Length > 0)
 	{
 		AS_SetFactionIcon(StackedClassIcon);
