@@ -38,6 +38,8 @@ Everyone is welcome to contribute to the project via [b][url=https://github.com/
 
 If you encounter a bug or have a suggesten, feel free to open an Issue, or file a Pull Request for one of the open Issues.
 
+When testing, be sure to do so in the live game. Attempting to test in the TQL will cause a crash.
+
 [h1]Credits[/h1]
 
 Thanks to [b]RustyDios[/b] for providing the mod preview image.

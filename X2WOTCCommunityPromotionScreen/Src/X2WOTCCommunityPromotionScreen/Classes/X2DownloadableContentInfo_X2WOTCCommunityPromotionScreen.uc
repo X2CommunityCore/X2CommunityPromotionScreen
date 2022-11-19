@@ -99,3 +99,33 @@ static final function Update_ViewLockedSkills_UISL()
 	}
 }
 // End Issue #62
+
+static event onPostMission() {
+	local StateObjectReference UnitRef;
+	local XComGameState_Unit Unit;
+	local XComGameState_HeadquartersXCom XCOMHQ;
+	local XComGameStateHistory History;
+	local int i;
+	`log("=================================");
+	`log("onPostMission in Promotion Screen Mod");
+
+	History = `XCOMHISTORY;
+	XCOMHQ = XComGameState_HeadquartersXCom(History.GetSingleGameStateObjectForClass(class'XComGameState_HeadquartersXCom'));
+	`log("Checking values that could be used to determine eligibility promotion");
+	`log("ObjectIDs of the entire roster");
+	for (i = 0; i < XCOMHQ.Crew.Length; i++) {
+		Unit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(XCOMHQ.Crew[i].ObjectID));
+		`log(XCOMHQ.Crew[i].ObjectID);
+		if (Unit.CanRankUpSoldier() && Unit.IsAlive() && Unit.IsSoldier()) {
+			`log("This Unit is eligible to Promote, start process");
+		}
+	}
+	`log("ObjectIDs of the deployed squad returning from mission");
+	foreach `XCOMHQ.Squad(UnitRef)
+	{
+		Unit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(UnitRef.ObjectID));
+		`log(UnitRef.ObjectID);
+	}
+
+
+}
