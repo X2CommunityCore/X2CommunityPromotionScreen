@@ -279,10 +279,15 @@ function ToggleAbilityTagForUnit(const int Index, XComGameState_Unit UnitState)
 	if (IsAbilityTaggedForUnit(Index, UnitState))
 	{
 		RemoveAbilityTag(Index);
+		// clear new unit value ? here?
 	}
 	else
 	{
 		SetAbilityTag(Index);
+		// set new unit value here?
+		// this index is the same index that would be sent to confirm ability selection as branch
+		// it adds position to its value however, but position usually stays as 0 unless setPosition changes that specific var
+		// would also need to clear this same value on unit purchase
 	}
 }
 

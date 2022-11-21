@@ -100,24 +100,56 @@ static final function Update_ViewLockedSkills_UISL()
 }
 // End Issue #62
 
+
+// auto promote feature. Run at the end of every mission so no soldier gets left behind.
+// could have it so it only iterates through all soldiers on a load and then only the squad on the post mission.
 static event onPostMission() {
 	local StateObjectReference UnitRef;
-	local XComGameState_Unit Unit;
+	local XComGameState_Unit Unit, UpdatedUnit;
+	local XComGameStateContext_ChangeContainer Container;
+	local XComGameState UpdateState;
 	local XComGameState_HeadquartersXCom XCOMHQ;
 	local XComGameStateHistory History;
-	local int i;
+	local array<CPS_UIAbilityTag> AbilityArray;
+	local int i, CurrentRank;
+	local array<SoldierClassAbilityType> RankAbilities;
+	local bool Ability
 	`log("=================================");
 	`log("onPostMission in Promotion Screen Mod");
 
 	History = `XCOMHISTORY;
 	XCOMHQ = XComGameState_HeadquartersXCom(History.GetSingleGameStateObjectForClass(class'XComGameState_HeadquartersXCom'));
+	AbilityArray = class 'CPS_UIArmory_PromotionHeroColumn'.default.AbilityTagIcons;
+	Container = class 'XComGameStateContext_ChangeContainer'.static.CreateEmptyChangeContainer("Soldier Promotion");
+	UpdateState = History.CreateNewGameState(true, Container);
+	`log("length of the variable");
+	`log(AbilityArray.Length);
 	`log("Checking values that could be used to determine eligibility promotion");
 	`log("ObjectIDs of the entire roster");
 	for (i = 0; i < XCOMHQ.Crew.Length; i++) {
-		Unit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(XCOMHQ.Crew[i].ObjectID));
+		// Unit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(XCOMHQ.Crew[i].ObjectID));
+		Unit = XComGameState_Unit(UpdateState.ModifyStateObject(class 'XComGameState_Unit', XCOMHQ.Crew[i].ObjectID));
 		`log(XCOMHQ.Crew[i].ObjectID);
-		if (Unit.CanRankUpSoldier() && Unit.IsAlive() && Unit.IsSoldier()) {
+		if (Unit.IsAlive() && Unit.IsSoldier() && Unit.CanRankUpSoldier()) { // Unit.IsResistanceHero()
+		// can a unit be a soldier and a resistance hero at the same time?
+			ResearchBranch(Unit);
 			`log("This Unit is eligible to Promote, start process");
+			CurrentRank = Unit.GetSoldierRank();
+			
+			// read Unit.HasAvailablePerksToAssign() for how to do the checking
+			RankAbilities = Unit.AbilityTree[CurrentRank - 1].Abilities;
+			foreach RankAbilities(Ability)
+			// need to figure out how to get PendingRank and PendingBranch (what is PendingBranch?)
+			// need to check that the ability is unlockable before doing this. What if it isn't unlockable?
+			// Problem: If the ability they want is for a higher rank, how do we
+			// A. promote them but not buy an ability so they can continue to progress
+			// B. go back and buy an ability from a lesser rank once they have acquired that ability
+			// Solution to B: iterate backwards through the trees and check with the Unit Values if the current Ability has the number we are looking for.
+			// Solution to A:
+			// fix this to match solution B
+			// If it isn't unlockable, skip buying an ability until it is. If the player wants the first ability unlocked
+			// to be from a higher rank, than so be it.
+			// Unit.BuySoldierProgressionAbility(UpdateState, CurrentRank + 1, PendingBranch)
 		}
 	}
 	`log("ObjectIDs of the deployed squad returning from mission");
@@ -128,4 +160,30 @@ static event onPostMission() {
 	}
 
 
+}
+
+
+function int GetBranchInt() {
+
+
+
+}
+// If we can determine the possible values for branch,
+// then we may be able to do some math with the ability index numbers
+// maybe wishful thinking.
+function ResearchBranch(Unit) {
+	local SoldierRankAbilities		AbilityTree;
+	local SoldierClassAbilityType	AbilityType;
+	local int i;
+	foreach Unit.AbilityTree(AbilityTree)
+	{
+		for (i = 0; i < AbilityTree.Abilities.Length; i++)
+		{
+			`log("==========================================");
+			`log("AbilityTree.Abilities[i].AbilityName");
+			`log(AbilityTree.Abilities[i].AbilityName);
+			`log("The index number");
+			`log(i);
+		}
+	}
 }
