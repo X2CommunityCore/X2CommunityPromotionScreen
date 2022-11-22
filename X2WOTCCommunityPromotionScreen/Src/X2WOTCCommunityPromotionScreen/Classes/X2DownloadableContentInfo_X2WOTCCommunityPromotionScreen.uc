@@ -163,13 +163,23 @@ static event onPostMission() {
 				PlannerIndex++;
 				Value = GetAbilityName(Unit, PlannerIndex);
 				if (Value.iRank == INDEX_NONE || Value.iBranch == INDEX_NONE) {
-				`log("Unit is not eligible to purchase next ability on the planner, move on");
+					`log("Unit is not eligible to purchase next ability on the planner, move on");
+					break;
+				}
+				if (Unit.GetCurrentRank() + 1 < Value.iRank) {
+					`log("The Unit is not the same rank as the pending rank. Remember, we added 1 to the value resolved from GetCurrentRank()");
+					`log("This means that the unit is not ready to buy this ability");
+					`log(Unit.GetCurrentRank());
+					`log(PendingRank)
 					break;
 				}
 				PendingRank = Value.iRank;
 				PendingBranch = Value.iBranch;
 				Unit.BuySoldierProgressionAbility(UpdateState, PendingRank, PendingBranch);
 			}
+			// add a variable that stores the return value of checking if the Unit has abilities marked on the planner.
+			// if they have no abilities marked, default to the config files.
+			// figure out how to add it as an option to the MCM.
 		}
 	}
 	`log("ObjectIDs of the deployed squad returning from mission");
@@ -182,7 +192,7 @@ static event onPostMission() {
 
 }
 
-
+// this function name is misleading. It gets the ability name to then return the rank and branch from the ability tree.
 function SCATProgression GetAbilityName(Unit, PlannerIndex) {
 	local SoldierRankAbilities		AbilityTree;
 	local SoldierClassAbilityType	AbilityType;
