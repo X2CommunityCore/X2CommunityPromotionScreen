@@ -14,6 +14,7 @@ var localized string GroupHeader;
 `MCM_API_AutoCheckBoxVars(DISABLE_NEWCLASS_POPUPS);
 `MCM_API_AutoCheckBoxVars(DISABLE_COMINT_POPUPS);
 `MCM_API_AutoIndexDropdownVars(ABILITY_TREE_PLANNER_MODE);
+`MCM_API_AutoIndexDropdownVars(AUTO_PROMOTE);
 
 `include(X2WOTCCommunityPromotionScreen\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
 
@@ -23,6 +24,7 @@ var localized string GroupHeader;
 `MCM_API_AutoCheckBoxFns(DISABLE_NEWCLASS_POPUPS, 1);
 `MCM_API_AutoCheckBoxFns(DISABLE_COMINT_POPUPS, 1);
 `MCM_API_AutoIndexDropdownFns(ABILITY_TREE_PLANNER_MODE, 2);
+`MCM_API_AutoIndexDropdownFns(AUTO_PROMOTE, 1);
 
 event OnInit(UIScreen Screen)
 {
@@ -72,6 +74,7 @@ simulated function LoadSavedSettings()
 	DISABLE_NEWCLASS_POPUPS = `GETMCMVAR(DISABLE_NEWCLASS_POPUPS);
 	DISABLE_COMINT_POPUPS = `GETMCMVAR(DISABLE_COMINT_POPUPS);
 	ABILITY_TREE_PLANNER_MODE = `GETMCMVAR(ABILITY_TREE_PLANNER_MODE);
+	AUTO_PROMOTE = `GETMCMVAR(AUTO_PROMOTE);
 }
 
 simulated function ResetButtonClicked(MCM_API_SettingsPage Page)
@@ -82,6 +85,7 @@ simulated function ResetButtonClicked(MCM_API_SettingsPage Page)
 	`MCM_API_AutoReset(DISABLE_NEWCLASS_POPUPS);
 	`MCM_API_AutoReset(DISABLE_COMINT_POPUPS);
 	`MCM_API_AutoIndexReset(ABILITY_TREE_PLANNER_MODE);
+	`MCM_API_AutoIndexReset(AUTO_PROMOTE);
 }
 
 simulated function SaveButtonClicked(MCM_API_SettingsPage Page)

@@ -8,3 +8,4 @@ var config bool DISABLE_TRAINING_CENTER_REQUIREMENT;
 var config bool DISABLE_NEWCLASS_POPUPS;
 var config bool DISABLE_COMINT_POPUPS;
 var config int ABILITY_TREE_PLANNER_MODE;
+var config int AUTO_PROMOTE;

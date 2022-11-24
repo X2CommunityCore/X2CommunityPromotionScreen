@@ -134,14 +134,15 @@ static event onPostMission() {
 		PlannerIndex = 1;
 		`log(XCOMHQ.Crew[i].ObjectID);
 		// still need to confirm if a unit can be a soldier and a resistance hero
-		if (Unit.IsAlive() && Unit.IsSoldier() || Unit.IsResistanceHero && Unit.CanRankUpSoldier()) {
+		if (Unit.IsAlive() && Unit.IsSoldier() || Unit.IsResistanceHero() && Unit.CanRankUpSoldier()) {
 			Value = GetAbilityName(Unit, PlannerIndex);
 			PendingRank = Value.iRank;
 			PendingBranch = Value.iBranch;
+			if (PendingRank == INDEX_NONE || PendingBranch == INDEX_NONE && `GETMCMVAR(AUTO_PROMOTE)) {
 			// add our config array manipulation around here
-			if (PendingRank == INDEX_NONE || PendingBranch == INDEX_NONE) {
-			`log("Yeah this ability doesn't exist on the tree, or they haven't marked any abilities on the planner");
-				continue;
+			// if they have no abilities marked, default to the config files.
+			// figure out how to add it as an option to the MCM.
+			`log("they haven't marked any abilities on the planner");
 			}
 			`log("This Unit is eligible to Promote, start process");
 
@@ -177,9 +178,6 @@ static event onPostMission() {
 				PendingBranch = Value.iBranch;
 				Unit.BuySoldierProgressionAbility(UpdateState, PendingRank, PendingBranch);
 			}
-			// add a variable that stores the return value of checking if the Unit has abilities marked on the planner.
-			// if they have no abilities marked, default to the config files.
-			// figure out how to add it as an option to the MCM.
 		}
 	}
 	`log("ObjectIDs of the deployed squad returning from mission");
@@ -214,7 +212,7 @@ function SCATProgression GetAbilityName(Unit, PlannerIndex) {
 			}
 		}
 	}
-	// if we didn't return anything, we need to.
+	// if we didn't return anything, we need to. This signifies that the ability is not marked on the ability tree
 	RB.iBranch = INDEX_NONE;
 	RB.iRank = INDEX_NONE;
 	return RB;
