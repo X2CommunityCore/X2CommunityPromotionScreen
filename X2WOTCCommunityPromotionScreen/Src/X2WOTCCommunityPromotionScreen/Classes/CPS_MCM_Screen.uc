@@ -13,8 +13,9 @@ var localized string GroupHeader;
 `MCM_API_AutoCheckBoxVars(DISABLE_TRAINING_CENTER_REQUIREMENT);
 `MCM_API_AutoCheckBoxVars(DISABLE_NEWCLASS_POPUPS);
 `MCM_API_AutoCheckBoxVars(DISABLE_COMINT_POPUPS);
+`MCM_API_AutoCheckBoxVars(AUTO_PROMOTE);
 `MCM_API_AutoIndexDropdownVars(ABILITY_TREE_PLANNER_MODE);
-`MCM_API_AutoIndexDropdownVars(AUTO_PROMOTE);
+
 
 `include(X2WOTCCommunityPromotionScreen\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
 
@@ -23,8 +24,8 @@ var localized string GroupHeader;
 `MCM_API_AutoCheckBoxFns(DISABLE_TRAINING_CENTER_REQUIREMENT, 1);
 `MCM_API_AutoCheckBoxFns(DISABLE_NEWCLASS_POPUPS, 1);
 `MCM_API_AutoCheckBoxFns(DISABLE_COMINT_POPUPS, 1);
+`MCM_API_AutoCheckBoxFns(AUTO_PROMOTE, 1);
 `MCM_API_AutoIndexDropdownFns(ABILITY_TREE_PLANNER_MODE, 2);
-`MCM_API_AutoIndexDropdownFns(AUTO_PROMOTE, 1);
 
 event OnInit(UIScreen Screen)
 {
@@ -48,7 +49,7 @@ simulated function ClientModCallback(MCM_API_Instance ConfigAPI, int GameMode)
 
 	// Issue #53
 	Group.AddDropdown('ABILITY_TREE_PLANNER_MODE', ABILITY_TREE_PLANNER_MODE_Label, ABILITY_TREE_PLANNER_MODE_Tip, ABILITY_TREE_PLANNER_MODE_Strings, ABILITY_TREE_PLANNER_MODE_Strings[ABILITY_TREE_PLANNER_MODE], ABILITY_TREE_PLANNER_MODE_SaveHandler).SetEditable(SHOW_UNREACHED_PERKS);
-	
+	`MCM_API_AutoAddCheckBox(Group, AUTO_PROMOTE);	
 	`MCM_API_AutoAddCheckBox(Group, SHOW_INVENTORY_SLOT);	
 	`MCM_API_AutoAddCheckBox(Group, DISABLE_TRAINING_CENTER_REQUIREMENT);	
 	`MCM_API_AutoAddCheckBox(Group, DISABLE_NEWCLASS_POPUPS);	
@@ -84,8 +85,8 @@ simulated function ResetButtonClicked(MCM_API_SettingsPage Page)
 	`MCM_API_AutoReset(DISABLE_TRAINING_CENTER_REQUIREMENT);
 	`MCM_API_AutoReset(DISABLE_NEWCLASS_POPUPS);
 	`MCM_API_AutoReset(DISABLE_COMINT_POPUPS);
+	`MCM_API_AutoReset(AUTO_PROMOTE);
 	`MCM_API_AutoIndexReset(ABILITY_TREE_PLANNER_MODE);
-	`MCM_API_AutoIndexReset(AUTO_PROMOTE);
 }
 
 simulated function SaveButtonClicked(MCM_API_SettingsPage Page)

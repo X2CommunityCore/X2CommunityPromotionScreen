@@ -22,6 +22,10 @@ static function autoPromote(XComGameState_Unit Unit, XComGameState UpdateState) 
 	soldierType = Unit.GetSoldierClassTemplateName();
 	iRank = Unit.GetSoldierRank();
 	Index = default.ClassPresets.find('soldierClass', soldierType);
+	`log("soldierType, iRank, Index");
+	`log(soldierType);
+	`log(iRank);
+	`log(Index);
 	if (Index != INDEX_NONE) {
 	// The soldier's class has a preset, autopromote it
 		switch(iRank) {
@@ -52,8 +56,8 @@ static function autoPromote(XComGameState_Unit Unit, XComGameState UpdateState) 
 	// if it doesn't have a preset, not our problem.
 }
 
-// this function name is misleading. It gets the ability name to then return the rank and branch from the ability tree.
-static function SCATProgression GetAbilityName(XComGameState_Unit Unit, int PlannerIndex) {
+
+static function SCATProgression GetAbilityNameIndexes(XComGameState_Unit Unit, int PlannerIndex) {
 	local SoldierRankAbilities		AbilityTree;
 	local SoldierClassAbilityType	AbilityType;
 	local string AbilityTagPrefix;
@@ -69,6 +73,8 @@ static function SCATProgression GetAbilityName(XComGameState_Unit Unit, int Plan
 			// error: Unexpected '.' folowing ''
 			if (Unit.GetUnitValue(name(AbilityTagPrefix $ AbilityType.AbilityName), UV)) {
 				if (UV.fValue == float(PlannerIndex)) {
+					// remove the Unit Value from the Unit
+					Unit.ClearUnitValue(name(AbilityTagPrefix $ AbilityType.AbilityName));
 					// get the rank and branch
 					RB = Unit.GetSCATProgressionForAbility(AbilityType.AbilityName);
 					return RB;

@@ -36,6 +36,9 @@ DISABLE_NEWCLASS_POPUPS_Tip = "Normalmente se muestra una ventana emergente cada
 DISABLE_COMINT_POPUPS_Label = "Desactivar la ventana emergente del tutorial de inteligencia de combate"
 DISABLE_COMINT_POPUPS_Tip = "Normalmente se muestra una ventana emergente cuando ingresas a la pantalla de ascenso de un soldado de alta inteligencia de combate por primera vez en una campaña. Puedes deshabilitar esta ventana emergente aquí."
 
+AUTO_PROMOTE_Label = "Enable Auto Promote"
+AUTO_PROMOTE_Tip = "Allows for troops to be autopromoted."
+
 ABILITY_TREE_PLANNER_MODE_Label = "Modo prueba del árbol de habilidades"
 ABILITY_TREE_PLANNER_MODE_Tip = "Cuando está habilitada, esta función te permite etiquetar (haciendo clic en ellos) las habilidades que planeas desbloquear para cada soldado individual. Vuelve a hacer clic en el talento para eliminar la etiqueta. En el modo \"Básico\" las habilidades están etiquetadas con iconos. En el modo \"Avanzado\" , las etiquetas contienen números que pueden servir como orden de desbloqueo o prioridad. De todas formas, todavía tienes que desbloquear nuevas habilidades tú mismo, puesto que las etiquetas sirven sólo como un recordatorio."
 ABILITY_TREE_PLANNER_MODE_Strings[0] = "Desactivado"

@@ -115,12 +115,16 @@ static event onPostMission() {
 	local XComGameState UpdateState;
 	local XComGameState_HeadquartersXCom XCOMHQ;
 	local XComGameStateHistory History;
-	local int i, PlannerIndex, PendingRank, PendingBranch, autopromote; // keep naming consistent
+	local int i, PlannerIndex, PendingRank, PendingBranch;
 	local SCATProgression Value;
 	`log("=================================");
 	`log("onPostMission in Promotion Screen Mod");
+	// we only want to autopromote if the ability planner tree is active.
+	if (`GETMCMVAR(AUTO_PROMOTE)) {
+		`log("Player has no interest in autopromoting of any kind. halt execution.");
+		return;
+	}
 	PlannerIndex = 1;
-	autopromote = `GETMCMVAR(AUTO_PROMOTE);
 	History = `XCOMHISTORY;
 	XCOMHQ = XComGameState_HeadquartersXCom(History.GetSingleGameStateObjectForClass(class'XComGameState_HeadquartersXCom'));
 	Container = class 'XComGameStateContext_ChangeContainer'.static.CreateEmptyChangeContainer("Soldier Promotion");
@@ -132,22 +136,17 @@ static event onPostMission() {
 		Unit = XComGameState_Unit(UpdateState.ModifyStateObject(class 'XComGameState_Unit', XCOMHQ.Crew[i].ObjectID));
 		PlannerIndex = 1;
 		`log(XCOMHQ.Crew[i].ObjectID);
-		// still need to confirm if a unit can be a soldier and a resistance hero
-		if (Unit.IsAlive() && Unit.IsSoldier() || Unit.IsResistanceHero() && Unit.CanRankUpSoldier()) {
-			Value = class 'AutoPromote'.static.GetAbilityName(Unit, PlannerIndex);
+		if (Unit.IsAlive() && Unit.IsSoldier() && Unit.CanRankUpSoldier()) {
+			Value = class 'AutoPromote'.static.GetAbilityNameIndexes(Unit, PlannerIndex);
 			PendingRank = Value.iRank;
 			PendingBranch = Value.iBranch;
-			if (PendingRank == INDEX_NONE || PendingBranch == INDEX_NONE && autopromote > 0) {
+			if (PendingRank == INDEX_NONE || PendingBranch == INDEX_NONE) {
 			// add our config array manipulation around here
 			// if they have no abilities marked, default to the config files.
 			// figure out how to add it as an option to the MCM.
 			`log("they haven't marked any abilities on the planner, and told us they want to automate promoting units so lets execute");
 			class 'AutoPromote'.static.autoPromote(Unit, UpdateState);
 			continue;
-			}
-			if (PendingRank == INDEX_NONE || PendingBranch == INDEX_NONE && autopromote == 0) {
-				`log("No abilities marked and they don't want to automate promoting. Lets move on");
-				continue;
 			}
 			`log("This Unit is eligible to Promote, start process");
 
@@ -166,7 +165,7 @@ static event onPostMission() {
 			// Check if the soldier is eligible to purchase the next ability marked from the ability planner.
 			while(true) {
 				PlannerIndex++;
-				Value = class 'AutoPromote'.static.GetAbilityName(Unit, PlannerIndex);
+				Value = class 'AutoPromote'.static.GetAbilityNameIndexes(Unit, PlannerIndex);
 				if (Value.iRank == INDEX_NONE || Value.iBranch == INDEX_NONE) {
 					`log("Unit is not eligible to purchase next ability on the planner, move on");
 					break;

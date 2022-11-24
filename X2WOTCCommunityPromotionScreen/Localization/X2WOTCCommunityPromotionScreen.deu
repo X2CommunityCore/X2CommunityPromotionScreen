@@ -31,6 +31,9 @@ DISABLE_NEWCLASS_POPUPS_Tip = "Normalerweise wird ein Popup-Fenster angezeigt, w
 DISABLE_COMINT_POPUPS_Label = "Popup-Fenster für das Kampfintelligenz-Tutorial deaktivieren"
 DISABLE_COMINT_POPUPS_Tip = "Normalerweise wird ein Popup-Fenster angezeigt, wenn du in einer Kampagne zum ersten Mal den Beförderungsbildschirm eines Soldaten mit hoher Kampfintelligenz aufrufst. Du kannst dieses Popup hier deaktivieren."
 
+AUTO_PROMOTE_Label = "Enable Auto Promote"
+AUTO_PROMOTE_Tip = "Allows for troops to be autopromoted."
+
 ABILITY_TREE_PLANNER_MODE_Label = "Fähigkeitenbaum Planungsmodus"
 ABILITY_TREE_PLANNER_MODE_Tip = "Wenn diese Funktion aktiviert ist, kannst du die Fähigkeiten, die du für jeden einzelnen Soldaten freischalten möchtest, markieren, indem du auf sie klickst. Klicke erneut auf die Fähigkeit, um die Markierung zu entfernen. Im Modus \"Grundlegend\" werden die Fähigkeiten mit Symbolen gekennzeichnet. Im Modus \"Fortgeschritten\" enthalten die Markierungen Zahlen, die als Freischaltreihenfolge oder Priorität dienen können. In beiden Modi musst du neue Fähigkeiten immer noch selbst freischalten, die Markierungen dienen nur als Erinnerung."
 ABILITY_TREE_PLANNER_MODE_Strings[0] = "Deaktiviert"
