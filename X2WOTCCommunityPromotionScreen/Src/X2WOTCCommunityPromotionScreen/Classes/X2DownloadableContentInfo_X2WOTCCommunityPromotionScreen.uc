@@ -120,7 +120,7 @@ static event onPostMission() {
 	`log("=================================");
 	`log("onPostMission in Promotion Screen Mod");
 	// we only want to autopromote if the ability planner tree is active.
-	if (`GETMCMVAR(AUTO_PROMOTE)) {
+	if (!`GETMCMVAR(AUTO_PROMOTE)) {
 		`log("Player has no interest in autopromoting of any kind. halt execution.");
 		return;
 	}
