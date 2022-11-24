@@ -110,18 +110,17 @@ static event OnLoadedSavedGameToStrategy() {}
 */
 static event onPostMission() {
 	local StateObjectReference UnitRef;
-	local XComGameState_Unit Unit, UpdatedUnit;
+	local XComGameState_Unit Unit;
 	local XComGameStateContext_ChangeContainer Container;
 	local XComGameState UpdateState;
 	local XComGameState_HeadquartersXCom XCOMHQ;
 	local XComGameStateHistory History;
-	local int i, PlannerIndex, PendingRank, PendingBranch; // keep naming consistent
-	local array<SoldierClassAbilityType> RankAbilities;
-	local bool Ability;
+	local int i, PlannerIndex, PendingRank, PendingBranch, autopromote; // keep naming consistent
 	local SCATProgression Value;
 	`log("=================================");
 	`log("onPostMission in Promotion Screen Mod");
 	PlannerIndex = 1;
+	autopromote = `GETMCMVAR(AUTO_PROMOTE);
 	History = `XCOMHISTORY;
 	XCOMHQ = XComGameState_HeadquartersXCom(History.GetSingleGameStateObjectForClass(class'XComGameState_HeadquartersXCom'));
 	Container = class 'XComGameStateContext_ChangeContainer'.static.CreateEmptyChangeContainer("Soldier Promotion");
@@ -135,24 +134,29 @@ static event onPostMission() {
 		`log(XCOMHQ.Crew[i].ObjectID);
 		// still need to confirm if a unit can be a soldier and a resistance hero
 		if (Unit.IsAlive() && Unit.IsSoldier() || Unit.IsResistanceHero() && Unit.CanRankUpSoldier()) {
-			Value = GetAbilityName(Unit, PlannerIndex);
+			Value = class 'AutoPromote'.static.GetAbilityName(Unit, PlannerIndex);
 			PendingRank = Value.iRank;
 			PendingBranch = Value.iBranch;
-			if (PendingRank == INDEX_NONE || PendingBranch == INDEX_NONE && `GETMCMVAR(AUTO_PROMOTE)) {
+			if (PendingRank == INDEX_NONE || PendingBranch == INDEX_NONE && autopromote > 0) {
 			// add our config array manipulation around here
 			// if they have no abilities marked, default to the config files.
 			// figure out how to add it as an option to the MCM.
-			`log("they haven't marked any abilities on the planner");
+			`log("they haven't marked any abilities on the planner, and told us they want to automate promoting units so lets execute");
+			class 'AutoPromote'.static.autoPromote(Unit, UpdateState);
+			continue;
+			}
+			if (PendingRank == INDEX_NONE || PendingBranch == INDEX_NONE && autopromote == 0) {
+				`log("No abilities marked and they don't want to automate promoting. Lets move on");
+				continue;
 			}
 			`log("This Unit is eligible to Promote, start process");
 
 			// If it isn't unlockable, skip buying an ability until it is. If the player wants the first ability unlocked
 			// to be from a higher rank, than so be it.
-			if (Unit.GetCurrentRank() + 1 < PendingRank) {
-				`log("The Unit is not the same rank as the pending rank. Remember, we added 1 to the value resolved from GetCurrentRank()");
-				`log("This means that the unit is not ready to buy this ability");
-				`log(Unit.GetCurrentRank());
-				`log(PendingRank)
+			if (Unit.GetSoldierRank() < PendingRank) {
+				`log("The Unit is not the same rank as the pending rank.");
+				`log(Unit.GetSoldierRank());
+				`log(PendingRank);
 				continue;
 			}
 			// buy the ability
@@ -162,16 +166,15 @@ static event onPostMission() {
 			// Check if the soldier is eligible to purchase the next ability marked from the ability planner.
 			while(true) {
 				PlannerIndex++;
-				Value = GetAbilityName(Unit, PlannerIndex);
+				Value = class 'AutoPromote'.static.GetAbilityName(Unit, PlannerIndex);
 				if (Value.iRank == INDEX_NONE || Value.iBranch == INDEX_NONE) {
 					`log("Unit is not eligible to purchase next ability on the planner, move on");
 					break;
 				}
-				if (Unit.GetCurrentRank() + 1 < Value.iRank) {
-					`log("The Unit is not the same rank as the pending rank. Remember, we added 1 to the value resolved from GetCurrentRank()");
-					`log("This means that the unit is not ready to buy this ability");
-					`log(Unit.GetCurrentRank());
-					`log(PendingRank)
+				if (Unit.GetSoldierRank() < Value.iRank) {
+					`log("The Unit is not the same rank as the pending rank.");
+					`log(Unit.GetSoldierRank());
+					`log(PendingRank);
 					break;
 				}
 				PendingRank = Value.iRank;
@@ -190,30 +193,4 @@ static event onPostMission() {
 
 }
 
-// this function name is misleading. It gets the ability name to then return the rank and branch from the ability tree.
-function SCATProgression GetAbilityName(Unit, PlannerIndex) {
-	local SoldierRankAbilities		AbilityTree;
-	local SoldierClassAbilityType	AbilityType;
-	local int i;
-	local string AbilityTagPrefix ;
-	local UnitValue UV;
-	local SCATProgression RB; // rank and branch
-	
-	AbilityTagPrefix= "CPS_AbilityTag_";
-	foreach Unit.AbilityTree(AbilityTree)
-	{
-		foreach AbilityTree.Abilities(AbilityType)
-		{
-			// iterate through the ability names and find the ability that was marked from the ability planner
-			if (Unit.GetUnitValue(name(AbilityTagPrefix $ AbilityType.AbilityName), UV).fValue == float(PlannerIndex)) {
-				// get the rank and branch
-				RB = Unit.GetSCATProgressionForAbility(AbilityType.AbilityName);
-				return RB;
-			}
-		}
-	}
-	// if we didn't return anything, we need to. This signifies that the ability is not marked on the ability tree
-	RB.iBranch = INDEX_NONE;
-	RB.iRank = INDEX_NONE;
-	return RB;
-}
+

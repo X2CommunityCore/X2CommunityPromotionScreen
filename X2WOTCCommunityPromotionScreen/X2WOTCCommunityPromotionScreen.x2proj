@@ -22,6 +22,9 @@
     <Folder Include="Src\X2WOTCCommunityPromotionScreen\Classes\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Config\XComGameData.ini">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Config\XComPromotionUIMod.ini">
       <SubType>Content</SubType>
     </Content>
@@ -124,6 +127,9 @@
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\NewPromotionScreenbyDefault\Classes\X2DownloadableContentInfo_NewPromotionScreenbyDefault.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\X2WOTCCommunityPromotionScreen\Classes\AutoPromote.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\X2WOTCCommunityPromotionScreen\Classes\CPS_UIAbilityTag.uc">
