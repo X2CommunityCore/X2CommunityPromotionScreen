@@ -26,7 +26,7 @@ static function autoPromote(XComGameState_Unit Unit, XComGameState UpdateState) 
 	`log(soldierType);
 	`log(iRank);
 	`log(Index);
-	if (Index != INDEX_NONE || Index != -1) {
+	if (Index != INDEX_NONE && Index != -1) {
 	// The soldier's class has a preset, autopromote it
 		switch(iRank) {
 			case 1: 
