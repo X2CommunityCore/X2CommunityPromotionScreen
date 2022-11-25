@@ -160,8 +160,9 @@ static event onPostMission() {
 			}
 			// buy the ability
 			// still need to confirm if the soldier will continue to promote even if no ability is purchased.
+			// doesn't seem to actually be buying anything
 			Unit.BuySoldierProgressionAbility(UpdateState, PendingRank, PendingBranch);
-			
+			`GAMERULES.SubmitGameState(UpdateState); // maybe needed this line?
 			// Check if the soldier is eligible to purchase the next ability marked from the ability planner.
 			while(true) {
 				PlannerIndex++;
@@ -179,6 +180,7 @@ static event onPostMission() {
 				PendingRank = Value.iRank;
 				PendingBranch = Value.iBranch;
 				Unit.BuySoldierProgressionAbility(UpdateState, PendingRank, PendingBranch);
+				`GAMERULES.SubmitGameState(UpdateState); // maybe needed this line?
 			}
 		}
 	}

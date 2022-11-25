@@ -52,6 +52,7 @@ static function autoPromote(XComGameState_Unit Unit, XComGameState UpdateState) 
 			break;
 		}
 		Unit.BuySoldierProgressionAbility(UpdateState,iRank,iBranch);
+		`GAMERULES.SubmitGameState(UpdateState); // maybe needed this line?
 	}
 	// if it doesn't have a preset, not our problem.
 }
