@@ -1,5 +1,5 @@
 // This is an Unreal Script
-class AutoPromote extends X2DownloadableContentInfo;
+class AutoPromote extends X2DownloadableContentInfo config(GameData);
 
 struct SoldierTypes {
 	var name soldierClass;
@@ -26,7 +26,7 @@ static function autoPromote(XComGameState_Unit Unit, XComGameState UpdateState) 
 	`log(soldierType);
 	`log(iRank);
 	`log(Index);
-	if (Index != INDEX_NONE) {
+	if (Index != INDEX_NONE || Index != -1) {
 	// The soldier's class has a preset, autopromote it
 		switch(iRank) {
 			case 1: 
@@ -52,6 +52,11 @@ static function autoPromote(XComGameState_Unit Unit, XComGameState UpdateState) 
 			break;
 		}
 		Unit.BuySoldierProgressionAbility(UpdateState,iRank,iBranch);
+		Unit.RankUpSoldier(UpdateState);
+		`GAMERULES.SubmitGameState(UpdateState); // maybe needed this line?
+	} 
+	else if (soldierType == 'Rookie') {
+		Unit.RankUpSoldier(UpdateState);
 		`GAMERULES.SubmitGameState(UpdateState); // maybe needed this line?
 	}
 	// if it doesn't have a preset, not our problem.
