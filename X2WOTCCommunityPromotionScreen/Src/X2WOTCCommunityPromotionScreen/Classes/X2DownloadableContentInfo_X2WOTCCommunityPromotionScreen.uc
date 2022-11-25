@@ -141,9 +141,7 @@ static event onPostMission() {
 			PendingRank = Value.iRank;
 			PendingBranch = Value.iBranch;
 			if (PendingRank == INDEX_NONE || PendingBranch == INDEX_NONE) {
-			// add our config array manipulation around here
 			// if they have no abilities marked, default to the config files.
-			// figure out how to add it as an option to the MCM.
 			`log("they haven't marked any abilities on the planner, and told us they want to automate promoting units so lets execute");
 			class 'AutoPromote'.static.autoPromote(Unit, UpdateState);
 			continue;
@@ -151,7 +149,7 @@ static event onPostMission() {
 			`log("This Unit is eligible to Promote, start process");
 
 			// If it isn't unlockable, skip buying an ability until it is. If the player wants the first ability unlocked
-			// to be from a higher rank, than so be it.
+			// to be from a higher rank, then so be it.
 			if (Unit.GetSoldierRank() < PendingRank) {
 				`log("The Unit is not the same rank as the pending rank.");
 				`log(Unit.GetSoldierRank());
@@ -159,10 +157,9 @@ static event onPostMission() {
 				continue;
 			}
 			// buy the ability
-			// still need to confirm if the soldier will continue to promote even if no ability is purchased.
-			// doesn't seem to actually be buying anything
 			Unit.BuySoldierProgressionAbility(UpdateState, PendingRank, PendingBranch);
-			`GAMERULES.SubmitGameState(UpdateState); // maybe needed this line?
+			Unit.RankUpSoldier(UpdateState);
+			`GAMERULES.SubmitGameState(UpdateState);
 			// Check if the soldier is eligible to purchase the next ability marked from the ability planner.
 			while(true) {
 				PlannerIndex++;
@@ -180,7 +177,8 @@ static event onPostMission() {
 				PendingRank = Value.iRank;
 				PendingBranch = Value.iBranch;
 				Unit.BuySoldierProgressionAbility(UpdateState, PendingRank, PendingBranch);
-				`GAMERULES.SubmitGameState(UpdateState); // maybe needed this line?
+				// Unit.RankUpSoldier(UpdateState); // The unit may already be the correct rank, so need to determine when this is necessary.
+				`GAMERULES.SubmitGameState(UpdateState);
 			}
 		}
 	}

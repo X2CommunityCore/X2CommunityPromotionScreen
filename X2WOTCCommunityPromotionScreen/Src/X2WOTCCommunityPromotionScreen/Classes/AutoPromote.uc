@@ -14,14 +14,13 @@ struct SoldierTypes {
 
 var config array<SoldierTypes> ClassPresets;
 
-// default.varname to access the config variables
-// Send over the unit
 static function autoPromote(XComGameState_Unit Unit, XComGameState UpdateState) {
 	local name soldierType;
 	local int Index, iRank, iBranch;
 	soldierType = Unit.GetSoldierClassTemplateName();
 	iRank = Unit.GetSoldierRank();
 	Index = default.ClassPresets.find('soldierClass', soldierType);
+	`log("If you have a custom soliderclass, soldierType is what you want to write into the game data ini file");
 	`log("soldierType, iRank, Index");
 	`log(soldierType);
 	`log(iRank);
@@ -53,11 +52,12 @@ static function autoPromote(XComGameState_Unit Unit, XComGameState UpdateState) 
 		}
 		Unit.BuySoldierProgressionAbility(UpdateState,iRank,iBranch);
 		Unit.RankUpSoldier(UpdateState);
-		`GAMERULES.SubmitGameState(UpdateState); // maybe needed this line?
+		`GAMERULES.SubmitGameState(UpdateState);
 	} 
 	else if (soldierType == 'Rookie') {
 		Unit.RankUpSoldier(UpdateState);
-		`GAMERULES.SubmitGameState(UpdateState); // maybe needed this line?
+		Unit.ApplyInventoryLoadout(UpdateState); // solider was promoted to squaddie, but kept rookie loadlout. Must fix with this.
+		`GAMERULES.SubmitGameState(UpdateState);
 	}
 	// if it doesn't have a preset, not our problem.
 }
@@ -76,9 +76,9 @@ static function SCATProgression GetAbilityNameIndexes(XComGameState_Unit Unit, i
 		foreach AbilityTree.Abilities(AbilityType)
 		{
 			// iterate through the ability names and find the ability that was marked from the ability planner
-			// error: Unexpected '.' folowing ''
 			if (Unit.GetUnitValue(name(AbilityTagPrefix $ AbilityType.AbilityName), UV)) {
 				if (UV.fValue == float(PlannerIndex)) {
+					// still need to delete and update Markings from Promotion Screen
 					// remove the Unit Value from the Unit
 					Unit.ClearUnitValue(name(AbilityTagPrefix $ AbilityType.AbilityName));
 					// get the rank and branch
