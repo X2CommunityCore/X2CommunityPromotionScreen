@@ -173,7 +173,7 @@ static event onPostMission() {
 				if (Unit.GetSoldierRank() < Value.iRank) {
 					`log("The Unit is not the same rank as the pending rank.");
 					`log(Unit.GetSoldierRank());
-					`log(PendingRank);
+					`log(Value.iRank);
 					break;
 				}
 				PendingRank = Value.iRank;
