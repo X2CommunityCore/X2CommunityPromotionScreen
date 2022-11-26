@@ -80,7 +80,7 @@ static function SCATProgression GetAbilityNameIndexes(XComGameState_Unit Unit, i
 				if (UV.fValue == float(PlannerIndex)) {
 					// still need to delete and update Markings from Promotion Screen
 					// remove the Unit Value from the Unit
-					Unit.ClearUnitValue(name(AbilityTagPrefix $ AbilityType.AbilityName));
+					// Unit.ClearUnitValue(name(AbilityTagPrefix $ AbilityType.AbilityName));
 					// get the rank and branch
 					RB = Unit.GetSCATProgressionForAbility(AbilityType.AbilityName);
 					return RB;

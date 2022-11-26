@@ -154,6 +154,9 @@ static event onPostMission() {
 				`log("The Unit is not the same rank as the pending rank.");
 				`log(Unit.GetSoldierRank());
 				`log(PendingRank);
+				`log("Rank up the soldier in the meantime since they can rank up");
+				Unit.RankUpSoldier(UpdateState);
+				`GAMERULES.SubmitGameState(UpdateState);
 				continue;
 			}
 			// buy the ability
