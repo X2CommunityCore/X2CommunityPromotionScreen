@@ -10,7 +10,7 @@ SparkAbilityTreeTitles[2]="XCOM"
 [CPS_UIArmory_PromotionHero]
 m_strMutuallyExclusive = "Взаимно исключаемо с:"
 
-arr_strLocReasonsLocked[0] = "Требуется предварительная способность."
+arr_strLocReasonsLocked[0] = "Требования способности не выполнены."
 arr_strLocReasonsLocked[1] = "Сперва надо выбрать классовую способность."
 arr_strLocReasonsLocked[2] = "Необходимо построить центр подготовки."
 arr_strLocReasonsLocked[3] = "Недостаточно очков способностей."

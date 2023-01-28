@@ -1,7 +1,7 @@
 [CPS_UIArmory_PromotionHero]
 m_strMutuallyExclusive = "Schließt sich gegenseitig aus mit:"
 
-arr_strLocReasonsLocked[0] = "Voraussetzung Fähigkeit erforderlich."
+arr_strLocReasonsLocked[0] = "Die Voraussetzungen der Fähigkeit sind nicht erfüllt."
 arr_strLocReasonsLocked[1] = "Wähle zuerst die Fähigkeit der Soldatenklasse auf diesem Rang aus."
 arr_strLocReasonsLocked[2] = "Trainingszentrum-Einrichtung erforderlich."
 arr_strLocReasonsLocked[3] = "Nicht genug Fähigkeitspunkte."
