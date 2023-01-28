@@ -16,8 +16,11 @@ ModName="Community Promotion Screen"
 PageTitle="Community Promotion Screen"
 GroupHeader="General Settings"
 
-SHOW_UNREACHED_PERKS_Label = "Display perks from unreached ranks"
-SHOW_UNREACHED_PERKS_Tip = "Normally you cannot preview perks from soldiers' future ranks. You can remove this restriction here."
+SHOW_UNREACHED_PERKS_MODE_Label = "Perks on unreached ranks"
+SHOW_UNREACHED_PERKS_MODE_Tip = "Normally you cannot preview perks from soldiers' future ranks. You can remove this restriction here."
+SHOW_UNREACHED_PERKS_MODE_Strings[0] = "Hide All"
+SHOW_UNREACHED_PERKS_MODE_Strings[1] = "Hide Training Center Perks"
+SHOW_UNREACHED_PERKS_MODE_Strings[2] = "Show All"
 
 SHOW_INVENTORY_SLOT_Label = "Display inventory slot"
 SHOW_INVENTORY_SLOT_Tip = "Toggles the display of the inventory slot to which the ability is attached to. Keep in mind the ability being attached to a slot does not always mean the ability will work only with items in that inventory slot."
