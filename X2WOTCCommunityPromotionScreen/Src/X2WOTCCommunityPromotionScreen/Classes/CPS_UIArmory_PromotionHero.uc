@@ -230,10 +230,19 @@ simulated function PopulateData()
 	}
 
 	// Display the "soldier has a new class" popup if required (issue #1)
-	if (Unit.bNeedsNewClassPopup && !`GETMCMVAR(DISABLE_NEWCLASS_POPUPS))
+	if (Unit.bNeedsNewClassPopup)
 	{
-		`HQPRES.UIClassEarned(Unit.GetReference());
-		Unit.bNeedsNewClassPopup = false;  //Prevent from queueing up more of these popups on toggling soldiers.
+		// If configured so in MCM, do not display the popup, unless we're in Tutorial, 
+		// in which case display it anyway to avoid a softlock (issue #83)
+		if (`GETMCMVAR(DISABLE_NEWCLASS_POPUPS) && class'XComGameState_HeadquartersXCom'.static.IsObjectiveCompleted('T0_M2_WelcomeToArmory'))
+		{
+			// Do nothing.
+		}
+		else
+		{
+			`HQPRES.UIClassEarned(Unit.GetReference());
+			Unit.bNeedsNewClassPopup = false;  //Prevent from queueing up more of these popups on toggling soldiers.
+		}
 	}
 
 	AS_SetRank(rankIcon);
