@@ -88,7 +88,7 @@ static final function Update_ViewLockedSkills_UISL()
 	CDO = UIScreenListener(class'XComEngine'.static.GetClassDefaultObjectByName('Main_ViewLockedSkillsWotc'));
 	if (CDO != none)
 	{	
-		if (`GETMCMVAR(SHOW_UNREACHED_PERKS))
+		if (`GETMCMVAR(SHOW_UNREACHED_PERKS_MODE) > 0)
 		{
 			CDO.ScreenClass = class'UIScreen_Dummy';
 		}
