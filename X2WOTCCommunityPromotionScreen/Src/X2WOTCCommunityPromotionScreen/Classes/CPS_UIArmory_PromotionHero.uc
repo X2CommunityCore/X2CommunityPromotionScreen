@@ -11,6 +11,11 @@ var UIScrollbar	Scrollbar;
 
 var config bool bLog;
 
+// Vars for Issue #84
+var private config int LargeUnitPawnOffset_Brigadier;
+var private config int LargeUnitPawnOffset;
+// End Issue #84
+
 // Vars for Issue #7
 enum EReasonLocked
 {
@@ -296,6 +301,77 @@ simulated function PopulateData()
 	
 	RealizeScrollbar();
 	HidePreview();
+}
+
+// Begin Issue #84
+private function MaybeAddLargeArmoryScaleOffset()
+{
+	local XComUnitPawnNativeBase	NativePawn;
+	local PointInSpace				PlacementActor;
+	local vector					PawnLocation;
+	local XComGameState_Unit		Unit;
+
+	Unit = GetUnit();
+	if (Unit == none || !Unit.UseLargeArmoryScale())
+		return;
+
+	NativePawn = XComUnitPawnNativeBase(ActorPawn);
+	if (NativePawn == none)
+		return;
+
+	PlacementActor = GetPlacementActor();
+	if (PlacementActor == none)
+		return;
+
+	PawnLocation = PlacementActor.Location;
+	if (bHasBrigadierRank)
+	{
+		PawnLocation.X += LargeUnitPawnOffset_Brigadier;
+	}
+	else
+	{
+		PawnLocation.X += LargeUnitPawnOffset;
+	}
+	NativePawn.SetLocationNoCollisionCheck(PawnLocation);
+}
+
+private function ResetPawnLocation()
+{
+	local XComUnitPawnNativeBase	NativePawn;
+	local PointInSpace				PlacementActor;
+
+	`LOG(self.Class.name @ GetFuncName(), bLog, 'PromotionScreen');
+	
+	NativePawn = XComUnitPawnNativeBase(ActorPawn);
+	if (NativePawn == none)
+		return;
+
+	PlacementActor = GetPlacementActor();
+	if (PlacementActor == none)
+		return;
+
+	NativePawn.SetLocationNoCollisionCheck(PlacementActor.Location);
+}
+// End Issue #84
+
+simulated function CreateSoldierPawn(optional Rotator DesiredRotation)
+{
+	`LOG(self.Class.name @ GetFuncName(), bLog, 'PromotionScreen');
+
+	super.CreateSoldierPawn(DesiredRotation);
+
+	// Single line for Issue #84 - Add horizontal offset to large units so they don't obscure the promotion screen.
+	MaybeAddLargeArmoryScaleOffset();
+}
+
+simulated function OnRemoved()
+{
+	`LOG(self.Class.name @ GetFuncName(), bLog, 'PromotionScreen');
+
+	// Single line for Issue #84 - move pawn back to its original armory location.
+	ResetPawnLocation();
+
+	super.OnRemoved();
 }
 
 // Start Issue #36
