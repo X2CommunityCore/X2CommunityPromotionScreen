@@ -58,6 +58,9 @@ static function OnPreCreateTemplates()
 
 	// Issue #62
 	Update_ViewLockedSkills_UISL();
+
+	// Issue #85
+	Neuter_VariousOptions_UISL();
 }
 
 // Start Issue #26
@@ -72,6 +75,19 @@ static final function Neuter_NPSBD_UISL()
     }
 }
 // End Issue #26
+
+// Start Issue #85
+static final function Neuter_VariousOptions_UISL()
+{
+	local UIScreenListener CDO;
+
+    CDO = UIScreenListener(class'XComEngine'.static.GetClassDefaultObjectByName(name("VariousOptions.AdvancedAbilityButton")));
+    if (CDO != none)
+    {
+        CDO.ScreenClass = class'UIScreen_Dummy';
+    }
+}
+// End Issue #85
 
 // Start Issue #62
 /// This handles CPS' compatibility with View Locked Skills - Wotc
