@@ -10,7 +10,7 @@ SparkAbilityTreeTitles[2]="XCOM"
 [CPS_UIArmory_PromotionHero]
 m_strMutuallyExclusive = "Excluyentes mutuamente con:"
 
-arr_strLocReasonsLocked[0] = "Prerrequisito de habilidad requerido."
+arr_strLocReasonsLocked[0] = "No se cumplen los requisitos previos de la habilidad."
 arr_strLocReasonsLocked[1] = "Escoge primero en este rango la habilidad de clase del soldado."
 arr_strLocReasonsLocked[2] = "Necesita la instalación Centro de entrenamiento."
 arr_strLocReasonsLocked[3] = "No hay suficientes puntos de habilidad."

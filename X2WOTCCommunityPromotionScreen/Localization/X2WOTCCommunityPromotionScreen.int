@@ -1,7 +1,7 @@
 [CPS_UIArmory_PromotionHero]
 m_strMutuallyExclusive = "Mutually exclusive with:"
 
-arr_strLocReasonsLocked[0] = "Prerequisite ability required."
+arr_strLocReasonsLocked[0] = "Ability's prerequisites are not met."
 arr_strLocReasonsLocked[1] = "Pick soldier class ability at this rank first."
 arr_strLocReasonsLocked[2] = "Training Center facility required."
 arr_strLocReasonsLocked[3] = "Not enough Ability Points."
