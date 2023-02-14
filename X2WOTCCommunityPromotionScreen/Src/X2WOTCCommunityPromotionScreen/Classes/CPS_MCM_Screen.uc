@@ -25,9 +25,6 @@ var localized string GroupHeader;
 `MCM_API_AutoCheckBoxFns(DISABLE_COMINT_POPUPS, 1);
 `MCM_API_AutoIndexDropdownFns(ABILITY_TREE_PLANNER_MODE, 2);
 
- // Single line for Issue #69
-`MCM_API_AutoIndexDropdownFns(SHOW_UNREACHED_PERKS_MODE, 4);
-
 event OnInit(UIScreen Screen)
 {
 	`MCM_API_Register(Screen, ClientModCallback);
@@ -60,6 +57,27 @@ simulated function ClientModCallback(MCM_API_Instance ConfigAPI, int GameMode)
 
 	Page.ShowSettings();
 }
+
+// Start Issue #84
+// Standard Save Handler.
+simulated function SHOW_UNREACHED_PERKS_MODE_SaveHandler(MCM_API_Setting _Setting, string _SettingValue)
+{
+    SHOW_UNREACHED_PERKS_MODE = SHOW_UNREACHED_PERKS_MODE_Strings.Find(_SettingValue);
+}
+// Custom getter for legacy support of mods that still specify their default value for no longer existing SHOW_UNREACHED_PERKS MCM setting.
+static function int getSHOW_UNREACHED_PERKS_MODE()
+{ 
+	// If the default value for SHOW_UNREACHED_PERKS is set and the user has not changed MCM config manually
+	if (class'CPS_MCM_Defaults'.default.SHOW_UNREACHED_PERKS && default.VERSION_CFG < 4)
+	{
+		// Then return the value for "show all perks"
+		return 2;
+	}
+	// Otherwise use standard getter code.
+	return default.VERSION_CFG < 4 ? Class'CPS_MCM_Defaults'.default.SHOW_UNREACHED_PERKS_MODE : default.SHOW_UNREACHED_PERKS_MODE;
+}
+// End Issue #84
+
 
 // Start Issue #53
 simulated function SHOW_UNREACHED_PERKS_MODE_ChangeHandler(MCM_API_Setting _Setting, string _SettingValue)
