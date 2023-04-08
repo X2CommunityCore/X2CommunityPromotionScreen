@@ -6,3 +6,12 @@ strPopupText = "\n안녕하세요 이것은 당신이 설치한 모드 <font col
 SparkAbilityTreeTitles[0]="미래 전투"
 SparkAbilityTreeTitles[1]="워머신"
 SparkAbilityTreeTitles[2]="XCOM"
+
+[CPS_MCM_Screen]
+SHOW_UNREACHED_PERKS_MODE_Strings[0] = "Hide All"
+SHOW_UNREACHED_PERKS_MODE_Strings[1] = "Hide Training Center Perks"
+SHOW_UNREACHED_PERKS_MODE_Strings[2] = "Show All"
+
+ABILITY_TREE_PLANNER_MODE_Strings[0] = "Disabled"
+ABILITY_TREE_PLANNER_MODE_Strings[1] = "Basic"
+ABILITY_TREE_PLANNER_MODE_Strings[2] = "Advanced"

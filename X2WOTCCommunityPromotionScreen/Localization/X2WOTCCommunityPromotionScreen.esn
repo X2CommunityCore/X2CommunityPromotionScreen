@@ -21,8 +21,11 @@ ModName="Pantalla de promoción comunitaria"
 PageTitle="Pantalla de promoción comunitaria"
 GroupHeader="Configuración general"
 
-SHOW_UNREACHED_PERKS_Label = "Mostrar habilidades de rangos bloqueados"
-SHOW_UNREACHED_PERKS_Tip = "Normalmente no es posible obtener una vista previa de las habilidades de los futuros rangos de los soldados. Puedes eliminar esta restricción aquí."
+SHOW_UNREACHED_PERKS_MODE_Label = "Habilidades en promociones no conseguidas"
+SHOW_UNREACHED_PERKS_MODE_Tip = "Normalmente no podes ver habilidades de soldados en los rangos no alcanzados. Podes remover la restricción acá"
+SHOW_UNREACHED_PERKS_MODE_Strings[0] = "Ocultar todas"
+SHOW_UNREACHED_PERKS_MODE_Strings[1] = "Ocultar habilidades del Centro de entrenamiento"
+SHOW_UNREACHED_PERKS_MODE_Strings[2] = "Mostrar todas"
 
 SHOW_INVENTORY_SLOT_Label = "Mostrar espacio de inventario"
 SHOW_INVENTORY_SLOT_Tip = "Alterna la visualización del espacio de inventario al que está asociada la habilidad. Ten en cuenta que la habilidad que se adjunta a un espacio no siempre significa que funcionará sólo con los elementos de ese espacio del inventario."

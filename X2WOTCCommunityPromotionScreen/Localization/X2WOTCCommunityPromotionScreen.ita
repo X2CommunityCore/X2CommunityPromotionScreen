@@ -6,3 +6,12 @@ strPopupText = "\nCiao, questo è un messaggio della mod <font color='#00ff00'>[
 SparkAbilityTreeTitles[0]="Guerra del futuro"
 SparkAbilityTreeTitles[1]="Macchina da guerra"
 SparkAbilityTreeTitles[2]="XCOM"
+
+[CPS_MCM_Screen]
+SHOW_UNREACHED_PERKS_MODE_Strings[0] = "Hide All"
+SHOW_UNREACHED_PERKS_MODE_Strings[1] = "Hide Training Center Perks"
+SHOW_UNREACHED_PERKS_MODE_Strings[2] = "Show All"
+
+ABILITY_TREE_PLANNER_MODE_Strings[0] = "Disabled"
+ABILITY_TREE_PLANNER_MODE_Strings[1] = "Basic"
+ABILITY_TREE_PLANNER_MODE_Strings[2] = "Advanced"

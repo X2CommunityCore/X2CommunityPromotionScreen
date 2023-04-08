@@ -19,6 +19,10 @@ GroupHeader="Allgemeine Einstellungen"
 SHOW_UNREACHED_PERKS_Label = "Fähigkeiten von unerreichten Rängen anzeigen"
 SHOW_UNREACHED_PERKS_Tip = "Normalerweise kannst du die Fähigkeiten der zukünftigen Ränge von Soldaten nicht in der Vorschau anzeigen. Du kannst diese Einschränkung hier aufheben."
 
+SHOW_UNREACHED_PERKS_MODE_Strings[0] = "Hide All"
+SHOW_UNREACHED_PERKS_MODE_Strings[1] = "Hide Training Center Perks"
+SHOW_UNREACHED_PERKS_MODE_Strings[2] = "Show All"
+
 SHOW_INVENTORY_SLOT_Label = "Inventarplatz anzeigen"
 SHOW_INVENTORY_SLOT_Tip = "Schaltet die Anzeige des Inventarplatzes um, an den die Fähigkeit angehängt ist. Beachte, dass eine Fähigkeit, die an einen Slot gebunden ist, nicht immer bedeutet, dass sie nur mit Gegenständen in diesem Inventarplatz funktioniert."
 

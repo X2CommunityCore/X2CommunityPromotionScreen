@@ -6,3 +6,12 @@ strPopupText = "\n你好, 这是你的Mod <font color='#00ff00'>[WOTC] Community
 SparkAbilityTreeTitles[0]="未来战斗"
 SparkAbilityTreeTitles[1]="战争机器"
 SparkAbilityTreeTitles[2]="XCOM"
+
+[CPS_MCM_Screen]
+SHOW_UNREACHED_PERKS_MODE_Strings[0] = "Hide All"
+SHOW_UNREACHED_PERKS_MODE_Strings[1] = "Hide Training Center Perks"
+SHOW_UNREACHED_PERKS_MODE_Strings[2] = "Show All"
+
+ABILITY_TREE_PLANNER_MODE_Strings[0] = "Disabled"
+ABILITY_TREE_PLANNER_MODE_Strings[1] = "Basic"
+ABILITY_TREE_PLANNER_MODE_Strings[2] = "Advanced"
