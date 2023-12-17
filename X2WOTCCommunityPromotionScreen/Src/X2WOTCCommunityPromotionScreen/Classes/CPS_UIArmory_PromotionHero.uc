@@ -59,6 +59,7 @@ struct CPSAbilityMetaInfo
 	var bool bUnitMeetsRankRequirement;
 	var bool bUnitCanSpendAP;
 	var bool bAsResistanceHero;
+	var string strAbilityDesc;
 };
 
 `include(X2WOTCCommunityPromotionScreen\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
@@ -1323,7 +1324,7 @@ function PreviewAbility(int Rank, int Branch)
 	local string SlotName;
 
 	// Variable for Issue #69
-	local bool bCanPurchasePerk;
+	//local bool bCanPurchasePerk;
 	local CPSAbilityMetaInfo MetaInfo;
 
 	// NPSBDP Patch
@@ -1474,7 +1475,30 @@ function PreviewAbility(int Rank, int Branch)
 			AbilityName $= " (" $ Locs(SlotName) $ ")";
 		}
 	}
+
+	FillAbilityMetaInfo(MetaInfo, Unit, Rank, Branch, AbilityTree[Branch].AbilityName);
+	MetaInfo.strAbilityDesc = AbilityDesc;
+	TriggerOverrideAbilityDescription(MetaInfo, Unit);
+	AbilityDesc = MetaInfo.strAbilityDesc;
+
 	AS_SetDescriptionData(AbilityIcon, AbilityName, AbilityDesc, "", CostLabel, AbilityCost, APLabel);
+}
+
+private function TriggerOverrideAbilityDescription(out CPSAbilityMetaInfo MetaInfo, XComGameState_Unit UnitState)
+{
+	local XComLWTuple Tuple;
+
+	/// Mods can listen to the 'CPS_OverrideAbilityDescription' event to conditionally modify 
+	/// displayed ability description.
+
+	Tuple = new class'XComLWTuple';
+	Tuple.Id = 'CPS_OverrideAbilityDescription';
+
+	FillTupleFromAbilityMetaInfo(MetaInfo, Tuple);
+
+	`XEVENTMGR.TriggerEvent(Tuple.Id, Tuple, UnitState);
+
+	UpdateAbilityMetaInfoFromTuple(MetaInfo, Tuple);
 }
 
 simulated function ConfirmAbilitySelection(int Rank, int Branch)
@@ -1769,7 +1793,7 @@ private function FillAbilityMetaInfo(out CPSAbilityMetaInfo MetaInfo, XComGameSt
 
 private function FillTupleFromAbilityMetaInfo(const CPSAbilityMetaInfo MetaInfo, XComLWTuple Tuple)
 {
-	Tuple.Data.Add(12);
+	Tuple.Data.Add(13);
 	Tuple.Data[0].kind = XComLWTVName;
 	Tuple.Data[0].n = MetaInfo.TemplateName;
 	Tuple.Data[1].kind = XComLWTVInt;
@@ -1794,6 +1818,8 @@ private function FillTupleFromAbilityMetaInfo(const CPSAbilityMetaInfo MetaInfo,
 	Tuple.Data[10].b = bAsResistanceHero;
 	Tuple.Data[11].kind = XComLWTVInt;
 	Tuple.Data[11].i = AbilitiesPerRank;
+	Tuple.Data[12].kind = XComLWTVString;
+	Tuple.Data[12].s = MetaInfo.strAbilityDesc;
 }
 
 private function UpdateAbilityMetaInfoFromTuple(out CPSAbilityMetaInfo MetaInfo, const XComLWTuple Tuple)
@@ -1806,6 +1832,7 @@ private function UpdateAbilityMetaInfoFromTuple(out CPSAbilityMetaInfo MetaInfo,
 	MetaInfo.bUnitMeetsRankRequirement = Tuple.Data[8].b;
 	MetaInfo.bUnitCanSpendAP = Tuple.Data[9].b;
 	MetaInfo.bAsResistanceHero = Tuple.Data[10].b;
+	MetaInfo.strAbilityDesc = Tuple.Data[12].s;
 }
 
 final static function string AbilityMetaInfo_ToString(const CPSAbilityMetaInfo MetaInfo)
