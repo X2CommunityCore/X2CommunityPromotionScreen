@@ -1,17 +1,46 @@
+[CPS_UIArmory_PromotionHero]
+m_strMutuallyExclusive = "互斥:"
+
+arr_strLocReasonsLocked[0] = "该能力的先决条件未达到。"
+arr_strLocReasonsLocked[1] = "该军阶请先选择士兵的职业能力。"
+arr_strLocReasonsLocked[2] = "需要训练中心设施。"
+arr_strLocReasonsLocked[3] = "能力点数不足。"
+arr_strLocReasonsLocked[4] = "需要更高军阶。"
+
 [UISL_CPS]
-strDisablePopup = "不要再显示此消息"
-strPopupText = "\n你好, 这是你的Mod <font color='#00ff00'>[WOTC] Community Promotion Screen</font>\n\n我检测到你所使用的Mod <font color='#ff0000'>[WOTC] New Promotion Screen by Default</font>是旧的版本. Mod<font color='#ff0000'>[WOTC] New Promotion Screen by Default</font>仍会生效, 但是你并不需要它\n\n我会代替处理<font color='#ff0000'>[WOTC] New Promotion Screen by Default</font>的一切以及更多,同时兼容其他所需要它的Mod. 因此建议你停用或卸载<font color='#ff0000'>[WOTC] New Promotion Screen by Default</font>"
+strDisablePopup = "不再显示此消息"
+strPopupText = "\n你好，这是你的Mod <font color='#00ff00'>[WOTC] Community Promotion Screen</font>\n\n我检测到你所使用的Mod <font color='#ff0000'>[WOTC] New Promotion Screen by Default</font>是旧的版本。Mod<font color='#ff0000'>[WOTC] New Promotion Screen by Default</font>仍会生效，但是你并不需要它\n\n我会代替处理<font color='#ff0000'>[WOTC] New Promotion Screen by Default</font>的一切以及更多，同时兼容其他所需要它的Mod。因此建议你停用或卸载<font color='#ff0000'>[WOTC] New Promotion Screen by Default</font>"
+
+[CPS_MCM_Screen]
+ModName="Community Promotion Screen"
+PageTitle="Community Promotion Screen"
+GroupHeader="通用设置"
+
+SHOW_UNREACHED_PERKS_MODE_Label = "未达到的军阶上的技能"
+SHOW_UNREACHED_PERKS_MODE_Tip = "通常情况下，你无法预览士兵未达到的军阶上的技能。你可以在这里移除这个限制。"
+SHOW_UNREACHED_PERKS_MODE_Strings[0] = "隐藏全部"
+SHOW_UNREACHED_PERKS_MODE_Strings[1] = "隐藏训练中心相关的技能"
+SHOW_UNREACHED_PERKS_MODE_Strings[2] = "显示全部"
+
+SHOW_INVENTORY_SLOT_Label = "显示物品栏的插槽"
+SHOW_INVENTORY_SLOT_Tip = "切换显示与能力相关联的物品栏插槽。请注意，能力与某个插槽相关联并不总是意味着该能力只能与该物品栏中的物品一起使用。"
+
+DISABLE_TRAINING_CENTER_REQUIREMENT_Label = "取消训练中心的限制"
+DISABLE_TRAINING_CENTER_REQUIREMENT_Tip = "通常情况下，普通士兵职业只有在玩家建造了训练中心设施时，才能在每个军阶上解锁多个技能。你可以在这里禁用这个要求。"
+
+DISABLE_NEWCLASS_POPUPS_Label = "禁用 \"新职业\" 弹框"
+DISABLE_NEWCLASS_POPUPS_Tip = "通常情况下，每当一个新兵晋升到新的职业时，会显示一个弹出窗口。你可以在这里禁用这个弹出窗口。"
+
+DISABLE_COMINT_POPUPS_Label = "禁用战斗智能教程弹出窗口"
+DISABLE_COMINT_POPUPS_Tip = "通常情况下，当你第一次在战役中进入高战斗智商士兵的晋升界面时，会显示一个弹出窗口。你可以在这里禁用这个弹出窗口。"
+
+ABILITY_TREE_PLANNER_MODE_Label = "能力树规划模式"
+ABILITY_TREE_PLANNER_MODE_Tip = "启用此功能后，你可以通过点击来标记计划学习的每个技能。再次点击技能即可取消标记。在“基础”模式下，使用图标进行标记。在“高级”模式下，标记中会包含数字，可以用作解锁顺序或优先级。无论哪种模式，你仍需要自己学习技能，标记只是作为提醒。"
+ABILITY_TREE_PLANNER_MODE_Strings[0] = "禁用"
+ABILITY_TREE_PLANNER_MODE_Strings[1] = "基础"
+ABILITY_TREE_PLANNER_MODE_Strings[2] = "高级"
 
 [X2EventListener_PromotionScreenOverrides]
 SparkAbilityTreeTitles[0]="未来战斗"
 SparkAbilityTreeTitles[1]="战争机器"
 SparkAbilityTreeTitles[2]="XCOM"
-
-[CPS_MCM_Screen]
-SHOW_UNREACHED_PERKS_MODE_Strings[0] = "Hide All"
-SHOW_UNREACHED_PERKS_MODE_Strings[1] = "Hide Training Center Perks"
-SHOW_UNREACHED_PERKS_MODE_Strings[2] = "Show All"
-
-ABILITY_TREE_PLANNER_MODE_Strings[0] = "Disabled"
-ABILITY_TREE_PLANNER_MODE_Strings[1] = "Basic"
-ABILITY_TREE_PLANNER_MODE_Strings[2] = "Advanced"
